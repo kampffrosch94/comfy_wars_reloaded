@@ -31,15 +31,15 @@
         default = (pkgs.mkShell.override { stdenv = pkgs.useMoldLinker pkgs.clangStdenv; }) {
           packages = with pkgs; [
             # rust stuff
-            (with pkgs.fenix; with complete; combine [
+            (with pkgs.fenix; with stable; combine [
               cargo
               clippy
               rust-src
               rustc
               rustfmt
-              targets.wasm32-unknown-unknown.latest.rust-std
+              targets.wasm32-unknown-unknown.stable.rust-std
               #targets.wasm32-unknown-emscripten.stable.rust-std
-              rustc-codegen-cranelift
+              #rustc-codegen-cranelift
             ])
             # rust-analyzer-nightly # optional
 
