@@ -1,7 +1,6 @@
 use std::{
     path::{Path, PathBuf},
     sync::mpsc::Receiver,
-    time::Instant,
 };
 
 use base::Context;
@@ -30,9 +29,9 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        let start = Instant::now();
+        // let start = Instant::now();
         worker.update(&mut ctx);
-        let duration = start.elapsed();
+        // let duration = start.elapsed();
         // println!("Reload + Execution took: {:?}", duration)));
 
         //draw_line(40.0, 40.0, 100.0, 200.0, 15.0, BLUE);
