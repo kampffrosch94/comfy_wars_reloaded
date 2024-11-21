@@ -3,15 +3,17 @@ use std::{
     sync::mpsc::Receiver,
 };
 
-use base::Context;
+use base::*;
 
 use macroquad::prelude::*;
 use notify::{Event, INotifyWatcher, RecursiveMode, Watcher};
 
 #[macroquad::main("MyGame")]
 async fn main() {
-    let mut ctx = Context {
-        draw: Box::new(|rect, c| {
+    struct Sample;
+
+    impl ContextTrait for Sample {
+        fn draw_rect(&self, rect: base::Rect, c: base::Color) {
             let color = macroquad::prelude::Color {
                 r: c.r,
                 g: c.g,
@@ -19,9 +21,17 @@ async fn main() {
                 a: c.a,
             };
             draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
-        }),
-        time: Box::new(|| get_time()),
-    };
+        }
+
+        /// time since program start
+        fn time(&self) -> f64 {
+            get_time()
+        }
+
+        fn draw_text(&self, text: &str, x: f32, y: f32) {
+            draw_text_ex(text, x, y, TextParams::default());
+        }
+    }
 
     let path = "../target/debug/libworker.so";
     let mut worker = WorkerReloader::new(path);
@@ -30,7 +40,7 @@ async fn main() {
         clear_background(BLACK);
 
         // let start = Instant::now();
-        worker.update(&mut ctx);
+        worker.update(&mut Sample {});
         // let duration = start.elapsed();
         // println!("Reload + Execution took: {:?}", duration)));
 
@@ -50,18 +60,20 @@ struct WorkerReloader {
     path: PathBuf,
     #[allow(unused)]
     watcher: INotifyWatcher,
+    persist_state: PersistWraper,
 }
 
 struct WorkerWrapper {
     #[allow(unused)]
     lib: libloading::Library,
-    update: extern "C" fn(&mut Context) -> (),
+    #[allow(improper_ctypes_definitions)]
+    update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> (),
 }
 
 impl WorkerReloader {
     fn new(path: &str) -> Self {
         let path = PathBuf::from(path);
-        let worker = Some(Self::create_worker(&path));
+        let worker = Self::create_worker(&path);
 
         let (tx, receiver) = std::sync::mpsc::channel();
 
@@ -69,25 +81,37 @@ impl WorkerReloader {
         watcher
             .watch(path.parent().unwrap(), RecursiveMode::NonRecursive)
             .unwrap();
+
+        let create: libloading::Symbol<extern "C" fn() -> PersistWraper> =
+            unsafe { worker.lib.get(b"permanent_state").unwrap() };
+        let persist_state = create();
+
+        let worker = Some(worker);
         Self {
             worker,
             watcher,
             receiver,
             path,
+            persist_state,
         }
     }
 
     fn create_worker(path: &Path) -> WorkerWrapper {
         unsafe {
             let lib = libloading::Library::new(path).unwrap();
-            let symb: libloading::Symbol<extern "C" fn(&mut Context) -> ()> =
-                lib.get(b"update").unwrap();
-            let update: extern "C" fn(&mut Context) -> () = std::mem::transmute(symb.into_raw());
-            WorkerWrapper { lib, update }
+            let symb: libloading::Symbol<
+                extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> (),
+            > = lib.get(b"update").unwrap();
+            let update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> () =
+                std::mem::transmute(symb.into_raw());
+            WorkerWrapper {
+                lib,
+                update,
+            }
         }
     }
 
-    fn update(&mut self, ctx: &mut Context) {
+    fn update(&mut self, ctx: &mut dyn ContextTrait) {
         let mut modified = false; // debounce reloading twice on multiple events
         while let Ok(event) = self.receiver.try_recv() {
             if let Ok(e) = event {
@@ -108,6 +132,8 @@ impl WorkerReloader {
             self.worker = Some(Self::create_worker(&self.path));
         }
 
-        (self.worker.as_ref().unwrap().update)(ctx);
+        let update = self.worker.as_ref().unwrap().update;
+        let ps = &mut self.persist_state;
+        update(ctx, ps);
     }
 }
