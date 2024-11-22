@@ -1,4 +1,4 @@
-use std::ffi::c_void;
+use std::{ffi::c_void, panic::UnwindSafe};
 
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
@@ -28,16 +28,17 @@ pub trait ContextTrait {
 
 /// Wrapper for state that is persisted between reloads
 #[repr(C)]
-pub struct PersistWraper {
+pub struct PersistWrapper {
     pub ptr: *mut c_void,
     pub size: usize,
     pub align: usize,
 }
 
-impl PersistWraper {
+impl PersistWrapper {
     pub fn ref_mut<T>(&mut self) -> &mut T {
         // TODO add checks for size and alignment matching
         let ptr = self.ptr as *mut T;
         unsafe { &mut *ptr }
     }
 }
+

@@ -8,6 +8,9 @@ use base::*;
 use macroquad::prelude::*;
 use notify::{Event, INotifyWatcher, RecursiveMode, Watcher};
 
+#[no_mangle]
+pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
+
 #[macroquad::main("MyGame")]
 async fn main() {
     struct Sample;
@@ -60,14 +63,14 @@ struct WorkerReloader {
     path: PathBuf,
     #[allow(unused)]
     watcher: INotifyWatcher,
-    persist_state: PersistWraper,
+    persist_state: PersistWrapper,
 }
 
 struct WorkerWrapper {
     #[allow(unused)]
     lib: libloading::Library,
     #[allow(improper_ctypes_definitions)]
-    update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> (),
+    update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> (),
 }
 
 impl WorkerReloader {
@@ -82,7 +85,7 @@ impl WorkerReloader {
             .watch(path.parent().unwrap(), RecursiveMode::NonRecursive)
             .unwrap();
 
-        let create: libloading::Symbol<extern "C" fn() -> PersistWraper> =
+        let create: libloading::Symbol<extern "C" fn() -> PersistWrapper> =
             unsafe { worker.lib.get(b"permanent_state").unwrap() };
         let persist_state = create();
 
@@ -100,14 +103,11 @@ impl WorkerReloader {
         unsafe {
             let lib = libloading::Library::new(path).unwrap();
             let symb: libloading::Symbol<
-                extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> (),
+                extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> (),
             > = lib.get(b"update").unwrap();
-            let update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWraper) -> () =
+            let update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> () =
                 std::mem::transmute(symb.into_raw());
-            WorkerWrapper {
-                lib,
-                update,
-            }
+            WorkerWrapper { lib, update }
         }
     }
 
@@ -134,6 +134,7 @@ impl WorkerReloader {
 
         let update = self.worker.as_ref().unwrap().update;
         let ps = &mut self.persist_state;
-        update(ctx, ps);
+
+	update(ctx, ps);
     }
 }
