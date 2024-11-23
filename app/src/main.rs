@@ -7,52 +7,42 @@ use base::*;
 
 use macroquad::prelude::*;
 use notify::{Event, INotifyWatcher, RecursiveMode, Watcher};
+mod context;
+mod util;
 
+/// this makes it possible to unload shared libraries even if they use
+/// thread local storage with destructors
+/// it leaks (a little bit) of memory though
+///
+/// see this post for details:
+/// https://fasterthanli.me/articles/so-you-want-to-live-reload-rust
 #[no_mangle]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
 #[macroquad::main("MyGame")]
 async fn main() {
-    struct Sample;
-
-    impl ContextTrait for Sample {
-        fn draw_rect(&self, rect: base::Rect, c: base::Color) {
-            let color = macroquad::prelude::Color {
-                r: c.r,
-                g: c.g,
-                b: c.b,
-                a: c.a,
-            };
-            draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
-        }
-
-        /// time since program start
-        fn time(&self) -> f64 {
-            get_time()
-        }
-
-        fn draw_text(&self, text: &str, x: f32, y: f32) {
-            draw_text_ex(text, x, y, TextParams::default());
-        }
-    }
-
     let path = "../target/debug/libworker.so";
     let mut worker = WorkerReloader::new(path);
 
+    let ctx = &mut context::Context::default();
+    //ctx.textures.load_texture(path, name);
     loop {
         clear_background(BLACK);
 
         // let start = Instant::now();
-        worker.update(&mut Sample {});
+        worker.update(ctx);
         // let duration = start.elapsed();
         // println!("Reload + Execution took: {:?}", duration)));
 
         //draw_line(40.0, 40.0, 100.0, 200.0, 15.0, BLUE);
         //draw_rectangle(screen_width() / 2.0 - 60.0, 100.0, 120.0, 60.0, GREEN);
 
+	ctx.process();
+
         let fps = get_fps();
         let s = format!("FPS: {}", if fps > 55 && fps < 65 { 60 } else { fps });
         draw_text(&s, 20.0, 20.0, 30.0, WHITE);
+
         next_frame().await
     }
 }
@@ -135,6 +125,6 @@ impl WorkerReloader {
         let update = self.worker.as_ref().unwrap().update;
         let ps = &mut self.persist_state;
 
-	update(ctx, ps);
+        update(ctx, ps);
     }
 }

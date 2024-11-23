@@ -40,13 +40,11 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
         c.draw_text(s, pos.0, pos.1);
     }
 
-    c.draw_text(&s.strings[2].1, 40., 302.);
-
     c.draw_rect(
         Rect {
-            x: 80.,
+            x: 280.,
             y: 50.,
-            w: 500.0,
+            w: 250.0,
             h: 50.,
         },
         Color {
@@ -55,6 +53,7 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
             b: 0.0,
             a: 1.0,
         },
+	0
     );
 
     let time = c.time();
@@ -72,6 +71,7 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
             b: 0.0,
             a: 1.0,
         },
+	0
     );
 
     //println!("Number: {}", dx);

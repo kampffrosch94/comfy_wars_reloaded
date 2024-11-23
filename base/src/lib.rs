@@ -1,4 +1,4 @@
-use std::{ffi::c_void, panic::UnwindSafe};
+use std::ffi::c_void;
 
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
@@ -18,12 +18,15 @@ pub struct Color {
 }
 
 pub trait ContextTrait {
-    fn draw_rect(&self, r: Rect, c: Color);
 
     /// time since program start
     fn time(&self) -> f64;
 
-    fn draw_text(&self, text: &str, x: f32, y: f32);
+    fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
+
+    fn draw_text(&mut self, text: &str, x: f32, y: f32);
+
+    fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
 }
 
 /// Wrapper for state that is persisted between reloads
@@ -41,4 +44,3 @@ impl PersistWrapper {
         unsafe { &mut *ptr }
     }
 }
-
