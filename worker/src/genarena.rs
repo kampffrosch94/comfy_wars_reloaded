@@ -127,7 +127,7 @@ impl<T> GenArena<T> {
     }
 
     pub fn len(&self) -> usize {
-	self.slots.len()
+        self.slots.len()
     }
 }
 
@@ -144,7 +144,6 @@ impl<T> IndexMut<Key<T>> for GenArena<T> {
         self.get_mut(index).expect("Key was invalid")
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -165,7 +164,7 @@ mod test {
         let mut arena = GenArena::new();
         let key1 = arena.push("1".to_string());
         let key2 = arena.push("2".into());
-	arena.remove(key1);
+        arena.remove(key1);
         let _key3 = arena.push("1".into());
         assert_eq!(None, arena.get(key1));
         assert_eq!("2", arena[key2]);
@@ -181,8 +180,10 @@ mod test {
         let _key1 = arena.push(1_u32);
         let key2 = arena.push(2);
         let _key3 = arena.push(3);
-	arena.remove(key2);
-        assert_eq!(&[1,3], arena.iter().cloned().collect::<Vec<_>>().as_slice());
+        arena.remove(key2);
+        assert_eq!(
+            &[1, 3],
+            arena.iter().cloned().collect::<Vec<_>>().as_slice()
+        );
     }
 }
-

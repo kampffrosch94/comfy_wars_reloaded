@@ -1,20 +1,20 @@
-use std::{ffi::c_void, panic::AssertUnwindSafe};
+use std::{collections::HashMap, ffi::c_void, panic::AssertUnwindSafe};
 
 use base::{Color, ContextTrait, PersistWrapper, Rect};
 use cosync::CosyncInput;
+use sprite::Sprite;
 mod genarena;
+mod sprite;
 
 /// not dropped across reloads
 struct PersistentState {
-    strings: Vec<((f32, f32), String)>,
-    number: i64,
+    sprites: HashMap<String, Sprite>,
 }
 
 #[no_mangle]
 pub extern "C" fn permanent_state() -> PersistWrapper {
     let state = PersistentState {
-        strings: Vec::new(),
-        number: 0,
+        sprites: sprite::load_sprites("../assets/sprites.json"),
     };
     let size = size_of_val(&state);
     let align = align_of_val(&state);
@@ -36,7 +36,7 @@ impl FleetingState {
             for _ in 0..5 {
                 cosync::sleep_ticks(30).await;
                 let mut s = input.get();
-                s.number += 1;
+                // s.number += 1;
             }
         });
         Self { queue }
@@ -77,19 +77,10 @@ pub extern "C" fn update(
 fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     f.queue.run_until_stall(s);
 
-    let len = s.strings.len();
-    // s.strings.clear();
-    if len < 3 {
-        let pos = (20., 150. + len as f32 * 20.);
-        let new = "New Text".into();
-        s.strings.push((pos, new));
-    }
+    //c.draw_text(&format!("Persistent Number: {}", s.number), 200., 200.);
 
-    for (pos, s) in &s.strings {
-        c.draw_text(s, pos.0, pos.1);
-    }
-
-    c.draw_text(&format!("Persistent Number: {}", s.number), 200., 200.);
+    s.sprites["red_infantry"].draw(c, 50., 50., 1);
+    s.sprites["arrow_s"].draw(c, 80., 50., 1);
 
     c.draw_rect(
         Rect {
