@@ -1,15 +1,20 @@
 use std::{ffi::c_void, panic::AssertUnwindSafe};
 
 use base::{Color, ContextTrait, PersistWrapper, Rect};
+use cosync::CosyncInput;
+mod genarena;
 
-struct MyState {
+/// not dropped across reloads
+struct PersistentState {
     strings: Vec<((f32, f32), String)>,
+    number: i64,
 }
 
 #[no_mangle]
 pub extern "C" fn permanent_state() -> PersistWrapper {
-    let state = MyState {
+    let state = PersistentState {
         strings: Vec::new(),
+        number: 0,
     };
     let size = size_of_val(&state);
     let align = align_of_val(&state);
@@ -18,16 +23,60 @@ pub extern "C" fn permanent_state() -> PersistWrapper {
     PersistWrapper { ptr, size, align }
 }
 
+/// dropped and recreated on reload
+/// you can change this definition without breaking hotreloading
+struct FleetingState {
+    queue: cosync::Cosync<PersistentState>,
+}
+
+impl FleetingState {
+    fn new() -> Self {
+        let mut queue = cosync::Cosync::new();
+        queue.queue(move |mut input: CosyncInput<PersistentState>| async move {
+            for _ in 0..5 {
+                cosync::sleep_ticks(30).await;
+                let mut s = input.get();
+                s.number += 1;
+            }
+        });
+        Self { queue }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn fleeting_state_create() -> PersistWrapper {
+    let state = FleetingState::new();
+    let size = size_of_val(&state);
+    let align = align_of_val(&state);
+    let boxed: Box<FleetingState> = Box::new(state);
+    let ptr = Box::into_raw(boxed) as *mut c_void;
+    PersistWrapper { ptr, size, align }
+}
+
+#[no_mangle]
+pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: PersistWrapper) {
+    let ptr = fleet.ptr as *mut FleetingState;
+    // put state into a box which gets dropped at the end of this method
+    let mut boxed: Box<FleetingState> = unsafe { Box::from_raw(ptr) };
+    boxed.queue.run_blocking(pers.ref_mut());
+}
+
 #[no_mangle]
 #[allow(improper_ctypes_definitions)]
-pub extern "C" fn update(c: &mut dyn ContextTrait, ps: &mut PersistWrapper) {
-    let s: &mut MyState = ps.ref_mut();
+pub extern "C" fn update(
+    c: &mut dyn ContextTrait,
+    persistent_state: &mut PersistWrapper,
+    fleeting_state: &mut PersistWrapper,
+) {
     _ = std::panic::catch_unwind(AssertUnwindSafe(|| {
-        update_inner(c, s);
+        let s: &mut PersistentState = persistent_state.ref_mut();
+        update_inner(c, s, fleeting_state.ref_mut());
     }));
 }
 
-fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
+fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
+    f.queue.run_until_stall(s);
+
     let len = s.strings.len();
     // s.strings.clear();
     if len < 3 {
@@ -40,6 +89,8 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
         c.draw_text(s, pos.0, pos.1);
     }
 
+    c.draw_text(&format!("Persistent Number: {}", s.number), 200., 200.);
+
     c.draw_rect(
         Rect {
             x: 280.,
@@ -48,16 +99,24 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
             h: 50.,
         },
         Color {
-            r: 1.,
+            r: 0.,
             g: 1.,
             b: 0.0,
             a: 1.0,
         },
-	0
+        0,
     );
 
-    let time = c.time();
-    let dx = (time * 2.).sin() * 200.;
+    let r = Rect {
+        x: 0.,
+        y: 0.,
+        w: 16. * 18.,
+        h: 16. * 11.,
+    };
+
+    //c.draw_texture("tiles", r, 50., 50., -1);
+
+    let dx = (c.time() * 2.).sin() * 200.;
     c.draw_rect(
         Rect {
             x: 300. + dx as f32,
@@ -71,7 +130,7 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut MyState) {
             b: 0.0,
             a: 1.0,
         },
-	0
+        0,
     );
 
     //println!("Number: {}", dx);

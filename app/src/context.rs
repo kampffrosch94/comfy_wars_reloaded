@@ -69,11 +69,11 @@ impl ContextTrait for Context {
 impl Context {
     /// executes deferred drawing, should be called once per frame
     pub fn process(&mut self) {
-	let buffer = &mut self.draw_buffer.borrow_mut();
-	buffer.sort_by_key(|it| it.z_level);
-	for draw in buffer.drain(..) {
-	    (draw.command)();
-	}
+        let buffer = &mut self.draw_buffer.borrow_mut();
+        buffer.sort_by_key(|it| it.z_level);
+        for draw in buffer.drain(..) {
+            (draw.command)();
+        }
     }
 }
 

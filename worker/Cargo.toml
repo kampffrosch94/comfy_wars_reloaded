@@ -8,3 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 base.path = "../base"
+cosync = "0.2.1"

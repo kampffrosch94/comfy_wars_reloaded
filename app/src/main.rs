@@ -25,7 +25,10 @@ async fn main() {
     let mut worker = WorkerReloader::new(path);
 
     let ctx = &mut context::Context::default();
-    //ctx.textures.load_texture(path, name);
+    ctx.textures
+        .load_texture("../assets/tilemap/tilemap_packed.png", "tiles")
+        .await
+        .unwrap();
     loop {
         clear_background(BLACK);
 
@@ -34,10 +37,7 @@ async fn main() {
         // let duration = start.elapsed();
         // println!("Reload + Execution took: {:?}", duration)));
 
-        //draw_line(40.0, 40.0, 100.0, 200.0, 15.0, BLUE);
-        //draw_rectangle(screen_width() / 2.0 - 60.0, 100.0, 120.0, 60.0, GREEN);
-
-	ctx.process();
+        ctx.process();
 
         let fps = get_fps();
         let s = format!("FPS: {}", if fps > 55 && fps < 65 { 60 } else { fps });
@@ -56,11 +56,17 @@ struct WorkerReloader {
     persist_state: PersistWrapper,
 }
 
+#[allow(improper_ctypes_definitions)]
+type UpdateFuncT =
+    extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper, &mut PersistWrapper) -> ();
+
 struct WorkerWrapper {
     #[allow(unused)]
     lib: libloading::Library,
     #[allow(improper_ctypes_definitions)]
-    update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> (),
+    update: UpdateFuncT,
+    /// renewed on hotreload
+    fleeting_state: PersistWrapper,
 }
 
 impl WorkerReloader {
@@ -92,12 +98,21 @@ impl WorkerReloader {
     fn create_worker(path: &Path) -> WorkerWrapper {
         unsafe {
             let lib = libloading::Library::new(path).unwrap();
-            let symb: libloading::Symbol<
-                extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> (),
-            > = lib.get(b"update").unwrap();
-            let update: extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> () =
-                std::mem::transmute(symb.into_raw());
-            WorkerWrapper { lib, update }
+
+            let symb: libloading::Symbol<UpdateFuncT> = lib.get(b"update").unwrap();
+            let update: UpdateFuncT = std::mem::transmute(symb.into_raw());
+
+            #[allow(improper_ctypes_definitions)]
+            type FleetingStateCreateFuncT = extern "C" fn() -> PersistWrapper;
+            let fleeting_state_create: libloading::Symbol<FleetingStateCreateFuncT> =
+                lib.get(b"fleeting_state_create").unwrap();
+            let fleeting_state = fleeting_state_create();
+
+            WorkerWrapper {
+                lib,
+                update,
+                fleeting_state,
+            }
         }
     }
 
@@ -117,14 +132,24 @@ impl WorkerReloader {
         }
 
         if modified && Path::new(&self.path).exists() {
-            self.worker = None; // need to unload before we can reload
+            // need to unload before we can reload
+            {
+                let worker = self.worker.take().unwrap();
+                #[allow(improper_ctypes_definitions)]
+                type FleetingStateDisposeFuncT = extern "C" fn(&mut PersistWrapper, PersistWrapper);
+                let fleeting_state_dispose: libloading::Symbol<FleetingStateDisposeFuncT> =
+                    unsafe { worker.lib.get(b"fleeting_state_dispose").unwrap() };
+                fleeting_state_dispose(&mut self.persist_state, worker.fleeting_state);
+            }
             println!("Reloading!");
             self.worker = Some(Self::create_worker(&self.path));
         }
 
-        let update = self.worker.as_ref().unwrap().update;
+	let worker = self.worker.as_mut().unwrap();
+        let update = worker.update;
+        let fleeting_state = &mut worker.fleeting_state;
         let ps = &mut self.persist_state;
 
-        update(ctx, ps);
+        update(ctx, ps, fleeting_state);
     }
 }
