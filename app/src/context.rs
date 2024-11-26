@@ -4,11 +4,12 @@ use base::*;
 
 use macroquad::prelude::*;
 
-use crate::util::texture_store::TextureStore;
+use crate::{camera::CameraWrapper, util::texture_store::TextureStore};
 
 #[derive(Default)]
 pub struct Context {
     draw_buffer: RefCell<Vec<DrawCommand>>,
+    pub camera: CameraWrapper,
     pub textures: TextureStore,
 }
 
@@ -71,6 +72,16 @@ impl ContextTrait for Context {
             Key::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
             Key::MouseRight => is_mouse_button_pressed(MouseButton::Right),
         }
+    }
+
+    fn mouse_screen(&self) -> FPos {
+        let m = mouse_position();
+        FPos { x: m.0, y: m.1 }
+    }
+
+    fn mouse_world(&self) -> FPos {
+        let m = self.camera.mouse_world();
+        FPos { x: m.x, y: m.y }
     }
 }
 

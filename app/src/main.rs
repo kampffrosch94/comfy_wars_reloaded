@@ -7,6 +7,7 @@ use base::*;
 
 use macroquad::prelude::*;
 use notify::{Event, INotifyWatcher, RecursiveMode, Watcher};
+mod camera;
 mod context;
 mod util;
 
@@ -24,6 +25,7 @@ async fn main() {
     let path = "../target/debug/libworker.so";
     let mut worker = WorkerReloader::new(path);
 
+    let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::default();
     ctx.textures
         .load_texture("../assets/tilemap/tilemap_packed.png", "tiles")
@@ -31,6 +33,26 @@ async fn main() {
         .unwrap();
     loop {
         clear_background(BLACK);
+
+        if is_mouse_button_down(MouseButton::Middle) {
+            ctx.camera.mouse_delta(last_mouse_pos, mouse_position());
+        }
+
+        last_mouse_pos = mouse_position();
+        match mouse_wheel() {
+            (_x, y) => {
+                if y != 0. {
+                    if y > 0. {
+                        ctx.camera.zoom(1);
+                    }
+                    if y < 0. {
+                        ctx.camera.zoom(-1);
+                    }
+                }
+            }
+        }
+
+        ctx.camera.process();
 
         // let start = Instant::now();
         worker.update(ctx);
@@ -145,7 +167,7 @@ impl WorkerReloader {
             self.worker = Some(Self::create_worker(&self.path));
         }
 
-	let worker = self.worker.as_mut().unwrap();
+        let worker = self.worker.as_mut().unwrap();
         let update = worker.update;
         let fleeting_state = &mut worker.fleeting_state;
         let ps = &mut self.persist_state;

@@ -12,6 +12,10 @@ pub trait ContextTrait {
     fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
 
     fn is_pressed(&self, button: Key) -> bool; 
+
+    fn mouse_screen(&self) -> FPos;
+
+    fn mouse_world(&self) -> FPos;
 }
 
 
@@ -19,6 +23,13 @@ pub enum Key {
     MouseLeft,
     MouseMiddle,
     MouseRight,
+}
+
+
+#[derive(Debug, Clone, Copy)]
+pub struct FPos {
+    pub x: f32,
+    pub y: f32,
 }
 
 /// x and y are in the top left

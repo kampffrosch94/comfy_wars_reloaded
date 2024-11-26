@@ -89,21 +89,10 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut Fleet
 	s.sprites["arrow_s"].draw(c, 80., 50., 1);
     }
 
-    c.draw_rect(
-        Rect {
-            x: 280.,
-            y: 50.,
-            w: 250.0,
-            h: 50.,
-        },
-        Color {
-            r: 0.,
-            g: 1.,
-            b: 0.0,
-            a: 1.0,
-        },
-        0,
-    );
+    let pos = c.mouse_world();
+    c.draw_rect(Rect {x: pos.x, y: pos.y, w: 50.0, h: 50.,},
+		Color {r: 0., g: 1., b: 0.0, a: 1.0,},
+		0);
 
     let r = Rect {
         x: 0.,
