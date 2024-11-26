@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ffi::c_void, panic::AssertUnwindSafe};
 
-use base::{Color, ContextTrait, PersistWrapper, Rect};
+use base::{Color, ContextTrait, Key, PersistWrapper, Rect};
 use cosync::CosyncInput;
 use sprite::Sprite;
 mod genarena;
@@ -11,11 +11,15 @@ struct PersistentState {
     sprites: HashMap<String, Sprite>,
 }
 
+impl PersistentState {
+    fn new() -> Self {
+        Self { sprites: sprite::load_sprites("../assets/sprites.json")}
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn permanent_state() -> PersistWrapper {
-    let state = PersistentState {
-        sprites: sprite::load_sprites("../assets/sprites.json"),
-    };
+    let state = PersistentState::new();
     let size = size_of_val(&state);
     let align = align_of_val(&state);
     let boxed = Box::new(state);
@@ -80,7 +84,10 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut Fleet
     //c.draw_text(&format!("Persistent Number: {}", s.number), 200., 200.);
 
     s.sprites["red_infantry"].draw(c, 50., 50., 1);
-    s.sprites["arrow_s"].draw(c, 80., 50., 1);
+
+    if c.is_pressed(Key::MouseLeft) {
+	s.sprites["arrow_s"].draw(c, 80., 50., 1);
+    }
 
     c.draw_rect(
         Rect {

@@ -1,5 +1,26 @@
 use std::ffi::c_void;
 
+
+pub trait ContextTrait {
+    /// time since program start
+    fn time(&self) -> f64;
+
+    fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
+
+    fn draw_text(&mut self, text: &str, x: f32, y: f32);
+
+    fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
+
+    fn is_pressed(&self, button: Key) -> bool; 
+}
+
+
+pub enum Key {
+    MouseLeft,
+    MouseMiddle,
+    MouseRight,
+}
+
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
 pub struct Rect {
@@ -15,18 +36,6 @@ pub struct Color {
     pub g: f32,
     pub b: f32,
     pub a: f32,
-}
-
-pub trait ContextTrait {
-
-    /// time since program start
-    fn time(&self) -> f64;
-
-    fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
-
-    fn draw_text(&mut self, text: &str, x: f32, y: f32);
-
-    fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
 }
 
 /// Wrapper for state that is persisted between reloads

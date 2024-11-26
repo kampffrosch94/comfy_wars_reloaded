@@ -64,6 +64,14 @@ impl ContextTrait for Context {
             self.draw_text(&format!("ERROR('{name}')"), x, y)
         }
     }
+
+    fn is_pressed(&self, button: Key) -> bool {
+        match button {
+            Key::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
+            Key::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
+            Key::MouseRight => is_mouse_button_pressed(MouseButton::Right),
+        }
+    }
 }
 
 impl Context {
