@@ -13,7 +13,9 @@ struct PersistentState {
 
 impl PersistentState {
     fn new() -> Self {
-        Self { sprites: sprite::load_sprites("../assets/sprites.json")}
+        Self {
+            sprites: sprite::load_sprites("../assets/sprites.json"),
+        }
     }
 }
 
@@ -86,13 +88,25 @@ fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut Fleet
     s.sprites["red_infantry"].draw(c, 50., 50., 1);
 
     if c.is_pressed(Key::MouseLeft) {
-	s.sprites["arrow_s"].draw(c, 80., 50., 1);
+        s.sprites["arrow_s"].draw(c, 80., 50., 1);
     }
 
     let pos = c.mouse_world();
-    c.draw_rect(Rect {x: pos.x, y: pos.y, w: 50.0, h: 50.,},
-		Color {r: 0., g: 1., b: 0.0, a: 1.0,},
-		0);
+    c.draw_rect(
+        Rect {
+            x: pos.x,
+            y: pos.y,
+            w: 50.0,
+            h: 50.,
+        },
+        Color {
+            r: 0.,
+            g: 1.,
+            b: 0.0,
+            a: 1.0,
+        },
+        0,
+    );
 
     let r = Rect {
         x: 0.,
