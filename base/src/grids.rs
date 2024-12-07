@@ -156,7 +156,6 @@ impl<T: Clone> Grid<T> {
         self.data.is_empty()
     }
 
-
     /// Returns an iterator over the rows of the grid.
     ///
     /// ```
@@ -334,7 +333,6 @@ impl<T: Clone, Pos: Into<(i32, i32)>> IndexMut<Pos> for Grid<T> {
     }
 }
 
-
 impl<T: Clone> Index<Pos> for Grid<T> {
     type Output = T;
 
@@ -348,7 +346,6 @@ impl<T: Clone> IndexMut<Pos> for Grid<T> {
         &mut self.data[(pos.x + pos.y * self.width) as usize]
     }
 }
-
 
 // impl<T: Clone> Index<(u32, u32)> for Grid<T> {
 //     type Output = T;

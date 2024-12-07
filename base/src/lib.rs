@@ -1,10 +1,16 @@
-use std::ffi::c_void;
+use std::{ffi::c_void, ops::Sub};
 pub mod grids;
 pub mod ldtk;
 
 pub trait ContextTrait {
     /// time since program start
     fn time(&self) -> f64;
+
+    /// frame delta time
+    fn delta(&self) -> f32;
+
+    /// frames per second
+    fn fps(&self) -> f32;
 
     fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
 
@@ -31,6 +37,14 @@ pub struct FPos {
     pub y: f32,
 }
 
+impl FPos {
+    pub fn lerp(self, rhs: Self, s: f32) -> Self {
+        let x = self.x + ((rhs.x - self.x) * s);
+        let y = self.y + ((rhs.y - self.y) * s);
+        Self { x, y }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Hash, Eq)]
 pub struct Pos {
     pub x: i32,
@@ -40,6 +54,14 @@ pub struct Pos {
 impl Pos {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+}
+
+impl Sub<Pos> for Pos {
+    type Output = (i32, i32);
+
+    fn sub(self, rhs: Pos) -> Self::Output {
+        (self.x - rhs.x, self.y - rhs.y)
     }
 }
 

@@ -19,6 +19,15 @@ impl ContextTrait for Context {
         get_time()
     }
 
+    fn delta(&self) -> f32 {
+	get_frame_time()
+    }
+
+    fn fps(&self) -> f32 {
+        get_fps() as f32
+    }
+
+
     fn draw_rect(&mut self, rect: base::Rect, c: base::Color, z_level: i32) {
         let color = macroquad::prelude::Color {
             r: c.r,

@@ -8,7 +8,7 @@ use base::{
 use nanoserde::DeJson;
 
 use crate::{
-    dijkstra::dijkstra,
+    dijkstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
     genarena::{GenArena, Key},
     persistent::PersistentState,
@@ -27,7 +27,9 @@ pub struct GameState {
 
 pub enum Selection {
     None,
-    Unit(Key<Actor>),
+    Selected(Key<Actor>),
+    Moving(Key<Actor>),
+    Confirm(Key<Actor>),
 }
 
 pub struct Actor {
@@ -80,7 +82,8 @@ impl GameState {
 }
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
-    f.queue.run_until_stall(s);
+    s.delta = c.delta();
+    f.co.run_until_stall(s);
 
     for tile in &s.ground_tiles {
         c.draw_texture("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 0);
@@ -94,37 +97,99 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
         sprite.draw(c, actor.draw_pos.x, actor.draw_pos.y, 10);
     }
 
-    // select actor
-    if c.is_pressed(Button::MouseLeft) {
-        let pos = world_to_game(c.mouse_world());
-        if let Some((key, _)) =
-            s.g.actors
-                .iter_keys()
-                .filter(|(_key, a)| a.pos == pos && a.team == Team::Blue)
-                .next()
-        {
-            s.g.selection = Selection::Unit(key);
-        }
-    }
-
-    // draw cursor
     match s.g.selection {
         Selection::None => {
             let pos = grid_world_pos(c.mouse_world());
             s.sprites["cursor"].draw(c, pos.x, pos.y, 10);
+            // select actor
+            if c.is_pressed(Button::MouseLeft) {
+                let pos = world_to_game(c.mouse_world());
+                if let Some((key, _)) =
+                    s.g.actors
+                        .iter_keys()
+                        .filter(|(_key, a)| a.pos == pos && a.team == Team::Blue)
+                        .next()
+                {
+                    s.g.selection = Selection::Selected(key);
+                }
+            }
         }
-        Selection::Unit(key) => {
+        Selection::Selected(key) => {
             let a = &s.g.actors[key];
             s.sprites["cursor"].draw(c, a.draw_pos.x, a.draw_pos.y, 10);
-            let pos = grid_world_pos(c.mouse_world());
-            s.sprites["arrow_ne"].draw(c, pos.x, pos.y, 10);
 
             // draw moveable area
             let start_pos = a.pos;
             let mut move_range = Grid::new(s.ground.width, s.ground.height, 0);
             move_range[start_pos] = 9;
             dijkstra(&mut move_range, &[start_pos], movement_cost(s, PLAYER_TEAM));
-	    draw_move_range(c, s, &move_range);
+            draw_move_range(c, s, &move_range);
+
+            // find goal
+            let mut grid = Grid::new(s.ground.width, s.ground.height, 0);
+            let goal = world_to_game(c.mouse_world());
+            *grid.get_clamped_mut(goal.x, goal.y) = 99; // TODO increase this when done developing
+            dijkstra(&mut grid, &[goal], movement_cost(s, PLAYER_TEAM));
+            move_range.clamp_values(0, 1);
+            grid.mul_inplace(&move_range);
+
+            // allow passing through allies, but don't stop on them
+            let mut seeds = Vec::new();
+            for actor in s.g.actors.iter() {
+                grid[actor.pos] = -99;
+                seeds.push(actor.pos);
+            }
+            let highest_reachable_pos = grid
+                .iter_coords()
+                .max_by_key(|(_pos, val)| *val)
+                .map(|(pos, _)| pos)
+                .unwrap();
+            seeds.push(highest_reachable_pos);
+            dijkstra(&mut grid, &seeds, movement_cost(s, PLAYER_TEAM));
+            grid.mul_inplace(&move_range);
+
+            // disallow moving through enemies
+            for actor in s.g.actors.iter().filter(|a| a.team != PLAYER_TEAM) {
+                grid[actor.pos] = -99;
+            }
+
+            // finally actually calculate and draw the path
+            let path = dijkstra_path(&grid, start_pos);
+            draw_move_range(c, s, &grid);
+            draw_move_path(c, s, &path);
+            if c.is_pressed(Button::MouseLeft) && path.len() > 0 {
+                s.g.selection = Selection::Moving(key);
+                f.co.queue(move |mut s| async move {
+                    for pos in path.iter() {
+                        let target = game_to_world(*pos);
+                        let mut lerpiness = 0.;
+                        while lerpiness < 1. {
+                            {
+                                let s = &mut s.get();
+                                lerpiness += s.delta * 25.;
+                                let drawpos = &mut s.g.actors[key].draw_pos;
+                                *drawpos = drawpos.lerp(target.into(), lerpiness);
+                            }
+                            cosync::sleep_ticks(1).await;
+                        }
+                    }
+                    let last = *path.last().unwrap();
+                    let target = game_to_world(last);
+                    let s = &mut s.get();
+                    s.g.actors[key].draw_pos = target.into();
+                    s.g.actors[key].pos = last;
+                    //s.g.selection = Selection::Confirm(key);
+                    s.g.selection = Selection::None;
+                });
+            }
+        }
+        Selection::Moving(key) => {
+            let a = &s.g.actors[key];
+            // TODO
+        }
+        Selection::Confirm(key) => {
+            let a = &s.g.actors[key];
+            // TODO
         }
     }
 }
@@ -161,5 +226,55 @@ fn draw_move_range(c: &mut dyn ContextTrait, s: &PersistentState, grid: &Grid<i3
             let pos = game_to_world(pos);
             s.sprites["move_range"].draw(c, pos.x, pos.y, 2);
         }
+    }
+}
+
+fn draw_move_path(c: &mut dyn ContextTrait, s: &PersistentState, path: &[Pos]) {
+    const DOWN: (i32, i32) = (0, 1);
+    const UP: (i32, i32) = (0, -1);
+    const RIGHT: (i32, i32) = (1, 0);
+    const LEFT: (i32, i32) = (-1, 0);
+
+    let mut iter = path.iter();
+    let prev = iter.next().cloned();
+    let mut prev_direction: Option<(i32, i32)> = None;
+    if let Some(mut prev) = prev {
+        for pos in iter {
+            let direction = (*pos - prev).into();
+            if let Some(prev_direction) = prev_direction {
+                let sprite = match (prev_direction, direction) {
+                    (LEFT, LEFT) | (RIGHT, RIGHT) => "arrow_we",
+                    (UP, UP) | (DOWN, DOWN) => "arrow_ns",
+                    (DOWN, RIGHT) | (LEFT, UP) => "arrow_ne",
+                    (UP, RIGHT) | (LEFT, DOWN) => "arrow_se",
+                    (DOWN, LEFT) | (RIGHT, UP) => "arrow_wn",
+                    (UP, LEFT) | (RIGHT, DOWN) => "arrow_ws",
+                    _ => panic!("should be impossible"),
+                };
+                let sprite = &s.sprites[sprite];
+                let draw_pos = game_to_world(prev);
+                sprite.draw(c, draw_pos.x, draw_pos.y, 10);
+            }
+            prev = *pos;
+            prev_direction = Some(direction);
+        }
+    }
+
+    // draw ending arrow
+    let len = path.len();
+    if len >= 2 {
+        let prev = path[path.len() - 2];
+        let pos = path[path.len() - 1];
+        let direction: (i32, i32) = (pos - prev).into();
+        let sprite = match direction {
+            LEFT => "arrow_w",
+            RIGHT => "arrow_e",
+            DOWN => "arrow_s",
+            UP => "arrow_n",
+            _ => panic!("should be impossible"),
+        };
+        let sprite = &s.sprites[sprite];
+        let draw_pos = game_to_world(pos);
+        sprite.draw(c, draw_pos.x, draw_pos.y, 10);
     }
 }

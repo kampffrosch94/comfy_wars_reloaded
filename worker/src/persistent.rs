@@ -22,6 +22,10 @@ pub struct PersistentState {
     pub ground_tiles: Vec<Tile>,
     pub terrain_tiles: Vec<Tile>,
     // ######### END  : data loaded from assets #########
+    /// need to smuggle this into coroutines and have not found a better way
+    pub delta: f32,
+
+    /// the actual game state we would save
     pub g: GameState,
 }
 
@@ -114,6 +118,7 @@ impl PersistentState {
             ground_tiles,
             terrain_tiles,
             g,
+            delta: 0.0,
         }
     }
 }
