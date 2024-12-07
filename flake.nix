@@ -41,7 +41,7 @@
               #targets.wasm32-unknown-emscripten.stable.rust-std
               #rustc-codegen-cranelift
             ])
-            # rust-analyzer-nightly # optional
+            rust-analyzer-nightly # optional
 
             # necessary to build
             pkg-config # locate C dependencies

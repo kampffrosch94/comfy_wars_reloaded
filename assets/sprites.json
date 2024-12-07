@@ -1,8 +1,7 @@
 {
   "blue_infantry": {
     "x": 256,
-    "y": 112
-  },
+    "y": 112},
   "red_infantry": {
     "x": 256,
     "y": 128

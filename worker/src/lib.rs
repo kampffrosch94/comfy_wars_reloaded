@@ -1,23 +1,16 @@
-use std::{collections::HashMap, ffi::c_void, panic::AssertUnwindSafe};
+use std::{ffi::c_void, panic::AssertUnwindSafe};
 
-use base::{Color, ContextTrait, Key, PersistWrapper, Rect};
-use cosync::CosyncInput;
-use sprite::Sprite;
+use base::{ContextTrait, PersistWrapper};
+use fleeting::FleetingState;
+use game::update_inner;
+use persistent::PersistentState;
+mod fleeting;
+mod game;
 mod genarena;
+mod persistent;
 mod sprite;
 
-/// not dropped across reloads
-struct PersistentState {
-    sprites: HashMap<String, Sprite>,
-}
-
-impl PersistentState {
-    fn new() -> Self {
-        Self {
-            sprites: sprite::load_sprites("../assets/sprites.json"),
-        }
-    }
-}
+pub const GRIDSIZE: f32 = 16.;
 
 #[no_mangle]
 pub extern "C" fn permanent_state() -> PersistWrapper {
@@ -27,26 +20,6 @@ pub extern "C" fn permanent_state() -> PersistWrapper {
     let boxed = Box::new(state);
     let ptr = Box::into_raw(boxed) as *mut c_void;
     PersistWrapper { ptr, size, align }
-}
-
-/// dropped and recreated on reload
-/// you can change this definition without breaking hotreloading
-struct FleetingState {
-    queue: cosync::Cosync<PersistentState>,
-}
-
-impl FleetingState {
-    fn new() -> Self {
-        let mut queue = cosync::Cosync::new();
-        queue.queue(move |mut input: CosyncInput<PersistentState>| async move {
-            for _ in 0..5 {
-                cosync::sleep_ticks(30).await;
-                let mut s = input.get();
-                // s.number += 1;
-            }
-        });
-        Self { queue }
-    }
 }
 
 #[no_mangle]
@@ -78,61 +51,4 @@ pub extern "C" fn update(
         let s: &mut PersistentState = persistent_state.ref_mut();
         update_inner(c, s, fleeting_state.ref_mut());
     }));
-}
-
-fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
-    f.queue.run_until_stall(s);
-
-    //c.draw_text(&format!("Persistent Number: {}", s.number), 200., 200.);
-
-    s.sprites["red_infantry"].draw(c, 50., 50., 1);
-
-    if c.is_pressed(Key::MouseLeft) {
-        s.sprites["arrow_s"].draw(c, 80., 50., 1);
-    }
-
-    let pos = c.mouse_world();
-    c.draw_rect(
-        Rect {
-            x: pos.x,
-            y: pos.y,
-            w: 50.0,
-            h: 50.,
-        },
-        Color {
-            r: 0.,
-            g: 1.,
-            b: 0.0,
-            a: 1.0,
-        },
-        0,
-    );
-
-    let r = Rect {
-        x: 0.,
-        y: 0.,
-        w: 16. * 18.,
-        h: 16. * 11.,
-    };
-
-    //c.draw_texture("tiles", r, 50., 50., -1);
-
-    let dx = (c.time() * 2.).sin() * 200.;
-    c.draw_rect(
-        Rect {
-            x: 300. + dx as f32,
-            y: 500.,
-            w: 200.0,
-            h: 50.,
-        },
-        Color {
-            r: 1.,
-            g: 0.,
-            b: 0.0,
-            a: 1.0,
-        },
-        0,
-    );
-
-    //println!("Number: {}", dx);
 }

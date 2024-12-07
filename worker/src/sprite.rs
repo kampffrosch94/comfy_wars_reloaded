@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use base::{ContextTrait, Rect};
 use nanoserde::DeJson;
 
+use crate::GRIDSIZE;
+
 #[derive(Clone)]
 pub struct Sprite {
     src: Rect,
@@ -20,8 +22,6 @@ pub struct SpriteData {
     pub y: i32,
 }
 
-const GRID_SIZE: f32 = 16.;
-
 pub fn load_sprites(path: &str) -> HashMap<String, Sprite> {
     let input = std::fs::read_to_string(path).unwrap();
     let loaded: HashMap<String, SpriteData> = DeJson::deserialize_json(&input).unwrap();
@@ -34,8 +34,8 @@ pub fn load_sprites(path: &str) -> HashMap<String, Sprite> {
                     src: Rect {
                         x: v.x as _,
                         y: v.y as _,
-                        w: GRID_SIZE,
-                        h: GRID_SIZE,
+                        w: GRIDSIZE as f32,
+                        h: GRIDSIZE as f32,
                     },
                 },
             )

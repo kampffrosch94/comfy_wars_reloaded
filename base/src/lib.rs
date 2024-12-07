@@ -1,5 +1,6 @@
 use std::ffi::c_void;
 pub mod ldtk;
+pub use grids;
 
 pub trait ContextTrait {
     /// time since program start

@@ -20,7 +20,7 @@ mod util;
 #[no_mangle]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
-#[macroquad::main("MyGame")]
+#[macroquad::main("Comfy Wars Reloaded")]
 async fn main() {
     let path = "../target/debug/libworker.so";
     let mut worker = WorkerReloader::new(path);
