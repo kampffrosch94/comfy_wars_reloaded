@@ -9,6 +9,7 @@ mod game;
 mod genarena;
 mod persistent;
 mod sprite;
+mod util;
 
 pub const GRIDSIZE: f32 = 16.;
 
@@ -48,6 +49,12 @@ pub extern "C" fn update(
     fleeting_state: &mut PersistWrapper,
 ) {
     _ = std::panic::catch_unwind(AssertUnwindSafe(|| {
+        if persistent_state.align != align_of::<PersistentState>()
+            || persistent_state.size != size_of::<PersistentState>()
+        {
+            println!("Reinit persistent state.");
+            *persistent_state = permanent_state();
+        }
         let s: &mut PersistentState = persistent_state.ref_mut();
         update_inner(c, s, fleeting_state.ref_mut());
     }));

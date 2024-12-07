@@ -33,6 +33,12 @@ pub struct FPos {
     pub y: f32,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Pos {
+    pub x: i32,
+    pub y: i32,
+}
+
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
 pub struct Rect {

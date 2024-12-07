@@ -2,12 +2,13 @@ use std::collections::HashMap;
 
 use base::{
     grids::Grid,
-    ldtk::{grid_from_layer, GroundType, TerrainType, LDTK},
+    ldtk::{grid_from_layer, EntityDef, EntityOnMap, GroundType, TerrainType, LDTK},
     FPos, Rect,
 };
 use nanoserde::DeJson;
 
 use crate::{
+    game::GameState,
     sprite::{self, Sprite},
     GRIDSIZE,
 };
@@ -21,6 +22,7 @@ pub struct PersistentState {
     pub ground_tiles: Vec<Tile>,
     pub terrain_tiles: Vec<Tile>,
     // ######### END  : data loaded from assets #########
+    pub g: GameState,
 }
 
 pub struct Tile {
@@ -103,12 +105,15 @@ impl PersistentState {
                 .collect();
         }
 
+        let g = GameState::new();
+
         Self {
             sprites: sprite::load_sprites("../assets/sprites.json"),
             ground,
             terrain,
             ground_tiles,
             terrain_tiles,
+            g,
         }
     }
 }
