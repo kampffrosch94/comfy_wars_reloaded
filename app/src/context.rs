@@ -66,11 +66,11 @@ impl ContextTrait for Context {
         }
     }
 
-    fn is_pressed(&self, button: Key) -> bool {
+    fn is_pressed(&self, button: Button) -> bool {
         match button {
-            Key::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
-            Key::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
-            Key::MouseRight => is_mouse_button_pressed(MouseButton::Right),
+            Button::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
+            Button::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
+            Button::MouseRight => is_mouse_button_pressed(MouseButton::Right),
         }
     }
 

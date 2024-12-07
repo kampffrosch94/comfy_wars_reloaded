@@ -127,6 +127,20 @@ impl<T> GenArena<T> {
         })
     }
 
+    pub fn iter_keys(&self) -> impl Iterator<Item = (Key<T>, &T)> {
+        self.slots.iter().enumerate().filter_map(|(index, slot)| {
+            let key = Key {
+                index: index as u32,
+                gen: slot.gen,
+                _type: PhantomData,
+            };
+            match slot.content {
+                Content::Filled(ref content) => Some((key, content)),
+                Content::Empty(_) => None,
+            }
+        })
+    }
+
     pub fn len(&self) -> usize {
         self.slots.len()
     }

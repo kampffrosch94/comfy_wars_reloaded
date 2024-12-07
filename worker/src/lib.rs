@@ -10,6 +10,7 @@ mod genarena;
 mod persistent;
 mod sprite;
 mod util;
+mod dijkstra;
 
 pub const GRIDSIZE: f32 = 16.;
 

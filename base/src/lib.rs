@@ -1,6 +1,6 @@
 use std::ffi::c_void;
+pub mod grids;
 pub mod ldtk;
-pub use grids;
 
 pub trait ContextTrait {
     /// time since program start
@@ -12,20 +12,18 @@ pub trait ContextTrait {
 
     fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
 
-    fn is_pressed(&self, button: Key) -> bool; 
+    fn is_pressed(&self, button: Button) -> bool;
 
     fn mouse_screen(&self) -> FPos;
 
     fn mouse_world(&self) -> FPos;
 }
 
-
-pub enum Key {
+pub enum Button {
     MouseLeft,
     MouseMiddle,
     MouseRight,
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct FPos {
@@ -33,10 +31,16 @@ pub struct FPos {
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,
+}
+
+impl Pos {
+    pub fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
 }
 
 /// x and y are in the top left

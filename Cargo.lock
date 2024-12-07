@@ -42,7 +42,6 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 name = "base"
 version = "0.1.0"
 dependencies = [
- "grids",
  "nanoserde",
 ]
 
@@ -180,24 +179,9 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.24.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5418c17512bdf42730f9032c74e1ae39afc408745ebb2acf72fbc4691c17945"
-
-[[package]]
-name = "glam"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e05e7e6723e3455f4818c7b26e855439f7546cf617ef669d1adedb8669e5cb9"
-
-[[package]]
-name = "grids"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dd88e4cce43ed103a98f4ea90b0638bab12803069e2626a8f6f1b37f32e2577"
-dependencies = [
- "glam 0.24.2",
-]
 
 [[package]]
 name = "hashbrown"
@@ -316,7 +300,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81fef16b2d4de22ac372b5d7d76273c0ead0a31f9de9bc649af8f816816db8a8"
 dependencies = [
  "fontdue",
- "glam 0.27.0",
+ "glam",
  "image",
  "macroquad_macro",
  "miniquad",

@@ -1,5 +1,5 @@
 /// stuff loaded from ldtk and co
-use grids::Grid;
+use crate::grids::Grid;
 use nanoserde::*;
 
 #[derive(DeJson, Debug)]
@@ -64,7 +64,7 @@ pub fn grid_from_layer<T: Clone, F: Fn(i32) -> T>(layer: &Layer, converter: F) -
     })
 }
 
-#[derive(DeJson, Debug, Clone, Copy, PartialEq, Eq,)]
+#[derive(DeJson, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Team {
     Blue,
     Red,

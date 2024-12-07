@@ -2,16 +2,28 @@ use std::collections::HashMap;
 
 use base::{
     ldtk::{EntityDef, EntityOnMap, Team, UnitType},
-    Color, ContextTrait, FPos, Key, Pos, Rect,
+    Button, Color, ContextTrait, FPos, Pos, Rect,
 };
 use nanoserde::DeJson;
 
-use crate::{fleeting::FleetingState, genarena::GenArena, persistent::PersistentState, util::grid_world_pos, GRIDSIZE};
+use crate::{
+    fleeting::FleetingState,
+    genarena::{GenArena, Key},
+    persistent::PersistentState,
+    util::{grid_world_pos, world_to_game},
+    GRIDSIZE,
+};
 
 const HP_MAX: i32 = 10;
 
 pub struct GameState {
     pub actors: GenArena<Actor>,
+    pub selection: Selection,
+}
+
+pub enum Selection {
+    None,
+    Unit(Key<Actor>),
 }
 
 pub struct Actor {
@@ -56,7 +68,10 @@ impl GameState {
                 actors.push(a);
             }
         }
-        GameState { actors }
+        GameState {
+            actors,
+            selection: Selection::None,
+        }
     }
 }
 
@@ -70,14 +85,36 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
         c.draw_texture("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 1);
     }
 
-    if c.is_pressed(Key::MouseLeft) {
-        s.sprites["arrow_s"].draw(c, 80., 50., 1);
-    }
-    let pos = grid_world_pos(c.mouse_world());
-    s.sprites["cursor"].draw(c, pos.x, pos.y, 1);
 
     for actor in s.g.actors.iter() {
-	let sprite = &s.sprites[&actor.sprite];
-	sprite.draw(c, actor.draw_pos.x, actor.draw_pos.y, 10);
+        let sprite = &s.sprites[&actor.sprite];
+        sprite.draw(c, actor.draw_pos.x, actor.draw_pos.y, 10);
+    }
+
+    // select actor
+    if c.is_pressed(Button::MouseLeft) {
+        let pos = world_to_game(c.mouse_world());
+        if let Some((key, _)) =
+            s.g.actors
+                .iter_keys()
+                .filter(|(_key, a)| a.pos == pos && a.team == Team::Blue)
+                .next()
+        {
+            s.g.selection = Selection::Unit(key);
+        }
+    }
+
+    // draw cursor
+    match s.g.selection {
+        Selection::None => {
+	    let pos = grid_world_pos(c.mouse_world());
+            s.sprites["cursor"].draw(c, pos.x, pos.y, 10);
+        }
+        Selection::Unit(key) => {
+            let a = &s.g.actors[key];
+            s.sprites["cursor"].draw(c, a.draw_pos.x, a.draw_pos.y, 10);
+	    let pos = grid_world_pos(c.mouse_world());
+            s.sprites["arrow_ne"].draw(c, pos.x, pos.y, 10);
+        }
     }
 }
