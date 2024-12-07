@@ -16,3 +16,9 @@ pub fn grid_world_pos(p: FPos) -> FPos {
     let y = (p.y / GRIDSIZE).floor() * GRIDSIZE;
     FPos { x, y }
 }
+
+pub fn game_to_world(p: Pos) -> FPos {
+    let x = p.x as f32 * GRIDSIZE;
+    let y = p.y as f32 * GRIDSIZE;
+    FPos { x, y }
+}

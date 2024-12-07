@@ -31,7 +31,7 @@ pub struct FPos {
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,

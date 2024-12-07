@@ -4,13 +4,13 @@ use base::{ContextTrait, PersistWrapper};
 use fleeting::FleetingState;
 use game::update_inner;
 use persistent::PersistentState;
+mod dijkstra;
 mod fleeting;
 mod game;
 mod genarena;
 mod persistent;
 mod sprite;
 mod util;
-mod dijkstra;
 
 pub const GRIDSIZE: f32 = 16.;
 
