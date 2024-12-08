@@ -13,9 +13,12 @@ impl TextureStore {
         &mut self,
         path: impl AsRef<str>,
         name: impl Into<String>,
+        antialias: bool,
     ) -> Result<(), macroquad::Error> {
         let texture = load_texture(path.as_ref()).await?;
-        texture.set_filter(FilterMode::Nearest);
+        if !antialias {
+            texture.set_filter(FilterMode::Nearest);
+        }
         self.textures.insert(name.into(), texture);
         Ok(())
     }

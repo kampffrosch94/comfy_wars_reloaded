@@ -85,11 +85,19 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     s.delta = c.delta();
     f.co.run_until_stall(s);
 
+    draw_nine_patch(c, "ui_bg", 16., Rect {x: 0., y: 500., w: 100., h: 70.});
+    draw_nine_patch(c, "ui_bg", 16., Rect {x: 0., y: 600., w: 32., h: 100.});
+    draw_nine_patch(c, "ui_bg", 16., Rect {x: 100., y: 600., w: 180., h: 180.});
+
+    //c.draw_rect(rect, c, z_level);
+    // TODO add Z to draw text
+    // c.draw_text("Hello World asfsj", 0., 500., 50);
+
     for tile in &s.ground_tiles {
-        c.draw_texture("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 0);
+        c.draw_texture_part("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 0);
     }
     for tile in &s.terrain_tiles {
-        c.draw_texture("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 1);
+        c.draw_texture_part("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 1);
     }
 
     for actor in s.g.actors.iter() {
@@ -178,18 +186,18 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
                     let s = &mut s.get();
                     s.g.actors[key].draw_pos = target.into();
                     s.g.actors[key].pos = last;
-                    //s.g.selection = Selection::Confirm(key);
-                    s.g.selection = Selection::None;
+                    s.g.selection = Selection::Confirm(key);
                 });
             }
         }
         Selection::Moving(key) => {
-            let a = &s.g.actors[key];
+            let _a = &s.g.actors[key];
             // TODO
         }
         Selection::Confirm(key) => {
             let a = &s.g.actors[key];
             // TODO
+            s.g.selection = Selection::None;
         }
     }
 }
@@ -277,4 +285,51 @@ fn draw_move_path(c: &mut dyn ContextTrait, s: &PersistentState, path: &[Pos]) {
         let draw_pos = game_to_world(pos);
         sprite.draw(c, draw_pos.x, draw_pos.y, 10);
     }
+}
+
+#[rustfmt::skip]
+fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: Rect) {
+    let z = 100;
+    let source_rect = Rect {x: 0., y: 0., w: 192., h: 64.,};
+
+
+    // corners
+    let tl = source_rect.take_left(corner).take_top(corner);
+    let tr = source_rect.take_right(corner).take_top(corner);
+    let bl = source_rect.take_left(corner).take_bot(corner);
+    let br = source_rect.take_right(corner).take_bot(corner);
+
+    c.draw_texture_part(texture, tl, trect.x, trect.y, z);
+    c.draw_texture_part(texture, tr, trect.take_right(corner).x, trect.y, z);
+    c.draw_texture_part(texture, bl, trect.x, trect.y + trect.h - corner, z);
+    c.draw_texture_part(texture, br, trect.take_right(corner).x, trect.take_bot(corner).y, z);
+
+    // middle sides
+    let amount = corner;
+    // top middle
+    let source = source_rect.skip_left(corner).take_top(corner).skip_right(corner);
+    let target = trect.take_top(amount).skip_left(amount).skip_right(amount);
+    c.draw_texture_part_scaled(texture, source, target, z);
+    // bot middle
+    let source = source_rect.skip_left(corner).take_bot(corner).skip_right(corner);
+    let target = trect.take_bot(amount).skip_left(amount).skip_right(amount);
+    c.draw_texture_part_scaled(texture, source, target, z);
+    // left middle
+    let source = source_rect.skip_top(corner).take_left(corner).skip_bot(corner);
+    let target = trect.skip_top(amount).skip_bot(amount).take_left(amount);
+    c.draw_texture_part_scaled(texture, source, target, z);
+    // right middle
+    let source = source_rect.skip_top(corner).take_right(corner).skip_bot(corner);
+    let target = trect.skip_top(amount).skip_bot(amount).take_right(amount);
+    c.draw_texture_part_scaled(texture, source, target, z);
+    // center 
+    let source = source_rect.skip_top(corner).skip_right(corner)
+	.skip_bot(corner).skip_left(corner);
+    let target = trect.skip_top(corner).skip_right(corner)
+	.skip_bot(corner).skip_left(corner);
+    c.draw_texture_part_scaled(texture, source, target, z);
+
+
+
+    //c.draw_text(&format!("{source:?}"), 0., 600., 50);
 }

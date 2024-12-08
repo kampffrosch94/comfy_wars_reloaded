@@ -28,9 +28,15 @@ async fn main() {
     let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::default();
     ctx.textures
-        .load_texture("../assets/tilemap/tilemap_packed.png", "tiles")
+        .load_texture("../assets/tilemap/tilemap_packed.png", "tiles", false)
         .await
         .unwrap();
+
+    ctx.textures
+        .load_texture("../assets/ui/rectangle_flat.png", "ui_bg", false)
+        .await
+        .unwrap();
+
     loop {
         clear_background(BLACK);
 
@@ -59,7 +65,7 @@ async fn main() {
         // let duration = start.elapsed();
         // println!("Reload + Execution took: {:?}", duration)));
 
-        ctx.process();
+        ctx.process().await;
 
         let fps = get_fps();
         let s = format!("FPS: {}", if fps > 55 && fps < 65 { 60 } else { fps });

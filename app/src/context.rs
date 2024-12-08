@@ -11,6 +11,7 @@ pub struct Context {
     draw_buffer: RefCell<Vec<DrawCommand>>,
     pub camera: CameraWrapper,
     pub textures: TextureStore,
+    pub loading: Vec<(String, String)>,
 }
 
 impl ContextTrait for Context {
@@ -20,13 +21,12 @@ impl ContextTrait for Context {
     }
 
     fn delta(&self) -> f32 {
-	get_frame_time()
+        get_frame_time()
     }
 
     fn fps(&self) -> f32 {
         get_fps() as f32
     }
-
 
     fn draw_rect(&mut self, rect: base::Rect, c: base::Color, z_level: i32) {
         let color = macroquad::prelude::Color {
@@ -45,11 +45,39 @@ impl ContextTrait for Context {
         });
     }
 
-    fn draw_text(&mut self, text: &str, x: f32, y: f32) {
-        draw_text_ex(text, x, y, TextParams::default());
+    fn draw_text(&mut self, text: &str, x: f32, y: f32, z_level: i32) {
+        let text = text.to_string();
+        let command = move || {
+            draw_text_ex(&text, x, y, TextParams::default());
+        };
+        self.draw_buffer.borrow_mut().push(DrawCommand {
+            z_level,
+            command: Box::new(command),
+        });
     }
 
-    fn draw_texture(&mut self, name: &str, src: base::Rect, x: f32, y: f32, z_level: i32) {
+    fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32) {
+        // load if not in texture store
+        // then add to draw buffer
+        if let Some(texture) = self.textures.get(name) {
+            let source = None;
+            let params = DrawTextureParams {
+                source,
+                ..Default::default()
+            };
+            let command = move || {
+                draw_texture_ex(&texture, x, y, WHITE, params);
+            };
+            self.draw_buffer.borrow_mut().push(DrawCommand {
+                z_level,
+                command: Box::new(command),
+            });
+        } else {
+            self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
+        }
+    }
+
+    fn draw_texture_part(&mut self, name: &str, src: base::Rect, x: f32, y: f32, z_level: i32) {
         // load if not in texture store
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
@@ -71,7 +99,41 @@ impl ContextTrait for Context {
                 command: Box::new(command),
             });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), x, y)
+            self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
+        }
+    }
+
+    fn draw_texture_part_scaled(
+        &mut self,
+        name: &str,
+        src: base::Rect,
+        target: base::Rect,
+        z_level: i32,
+    ) {
+        // load if not in texture store
+        // then add to draw buffer
+        if let Some(texture) = self.textures.get(name) {
+            let source = Some(macroquad::math::Rect {
+                x: src.x,
+                y: src.y,
+                w: src.w,
+                h: src.h,
+            });
+            let dest_size = Some(vec2(target.w, target.h));
+            let params = DrawTextureParams {
+                source,
+                dest_size,
+                ..Default::default()
+            };
+            let command = move || {
+                draw_texture_ex(&texture, target.x, target.y, WHITE, params);
+            };
+            self.draw_buffer.borrow_mut().push(DrawCommand {
+                z_level,
+                command: Box::new(command),
+            });
+        } else {
+            self.draw_text(&format!("ERROR('{name}')"), target.x, target.y, 9999)
         }
     }
 
@@ -92,11 +154,38 @@ impl ContextTrait for Context {
         let m = self.camera.mouse_world();
         FPos { x: m.x, y: m.y }
     }
+
+    fn load_texture(&mut self, name: &str, path: &str) {
+        self.loading.push((name.to_string(), path.to_string()));
+    }
+
+    fn texture_dimensions(&mut self, name: &str) -> base::Rect {
+        self.textures
+            .get(name)
+            .map(|t| base::Rect {
+                x: 0.,
+                y: 0.,
+                w: t.width(),
+                h: t.width(),
+            })
+            .unwrap_or(base::Rect {
+                x: 0.,
+                y: 0.,
+                w: 0.,
+                h: 0.,
+            })
+    }
 }
 
 impl Context {
     /// executes deferred drawing, should be called once per frame
-    pub fn process(&mut self) {
+    pub async fn process(&mut self) {
+        for (name, path) in self.loading.drain(..) {
+            if let Err(_err) = self.textures.load_texture(&path, name, false).await {
+                println!("Error loading {}", &path);
+            }
+        }
+
         let buffer = &mut self.draw_buffer.borrow_mut();
         buffer.sort_by_key(|it| it.z_level);
         for draw in buffer.drain(..) {

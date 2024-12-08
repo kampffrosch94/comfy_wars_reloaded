@@ -12,7 +12,7 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32, z_level: i32) {
-        c.draw_texture("tiles", self.src, x, y, z_level)
+        c.draw_texture_part("tiles", self.src, x, y, z_level)
     }
 }
 

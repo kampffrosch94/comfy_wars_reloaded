@@ -1,6 +1,7 @@
 use std::{ffi::c_void, ops::Sub};
 pub mod grids;
 pub mod ldtk;
+pub mod rect;
 
 pub trait ContextTrait {
     /// time since program start
@@ -14,9 +15,17 @@ pub trait ContextTrait {
 
     fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
 
-    fn draw_text(&mut self, text: &str, x: f32, y: f32);
+    fn draw_text(&mut self, text: &str, x: f32, y: f32, z_level: i32);
 
-    fn draw_texture(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
+    fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32);
+
+    fn draw_texture_part(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
+    
+    fn draw_texture_part_scaled(&mut self, name: &str, src: Rect, target: Rect, z_level: i32);
+
+    fn load_texture(&mut self, name: &str, path: &str);
+
+    fn texture_dimensions(&mut self, name: &str) -> Rect;
 
     fn is_pressed(&self, button: Button) -> bool;
 
