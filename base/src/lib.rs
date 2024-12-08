@@ -15,7 +15,7 @@ pub trait ContextTrait {
 
     fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
 
-    fn draw_text(&mut self, text: &str, x: f32, y: f32, z_level: i32);
+    fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32);
 
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32);
 

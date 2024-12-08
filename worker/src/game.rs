@@ -80,9 +80,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     s.delta = c.delta();
     f.co.run_until_stall(s);
 
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 0., y: 500., w: 100., h: 70. });
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 0., y: 600., w: 32., h: 100. });
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 100., y: 600., w: 180., h: 180. });
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 00., y: 500., w: 100., h: 70. });
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 00., y: 600., w: 32., h: 100. });
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 50., y: 600., w: 180., h: 180. });
 
     //c.draw_rect(rect, c, z_level);
     // TODO add Z to draw text
@@ -192,6 +192,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
             s.g.selection = Selection::None;
         }
     }
+
+
+    c.draw_text(&format!("Hello World!"), 16., 350., 0., 50);
 }
 
 fn movement_cost<'a>(s: &'a PersistentState, team: Team) -> impl Fn(Pos) -> i32 + 'a {
@@ -294,23 +297,21 @@ fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: 
     c.draw_texture_part(texture, bl, trect.x, trect.y + trect.h - corner, z);
     c.draw_texture_part(texture, br, trect.take_right(corner).x, trect.take_bot(corner).y, z);
 
-    // middle sides
-    let amount = corner;
     // top middle
     let source = source_rect.skip_left(corner).take_top(corner).skip_right(corner);
-    let target = trect.take_top(amount).skip_left(amount).skip_right(amount);
+    let target = trect.take_top(corner).skip_left(corner).skip_right(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
     // bot middle
     let source = source_rect.skip_left(corner).take_bot(corner).skip_right(corner);
-    let target = trect.take_bot(amount).skip_left(amount).skip_right(amount);
+    let target = trect.take_bot(corner).skip_left(corner).skip_right(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
     // left middle
     let source = source_rect.skip_top(corner).take_left(corner).skip_bot(corner);
-    let target = trect.skip_top(amount).skip_bot(amount).take_left(amount);
+    let target = trect.skip_top(corner).skip_bot(corner).take_left(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
     // right middle
     let source = source_rect.skip_top(corner).take_right(corner).skip_bot(corner);
-    let target = trect.skip_top(amount).skip_bot(amount).take_right(amount);
+    let target = trect.skip_top(corner).skip_bot(corner).take_right(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
     // center
     let source =
@@ -318,5 +319,4 @@ fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: 
     let target = trect.skip_top(corner).skip_right(corner).skip_bot(corner).skip_left(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
 
-    //c.draw_text(&format!("{source:?}"), 0., 600., 50);
 }

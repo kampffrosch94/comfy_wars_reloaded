@@ -39,10 +39,18 @@ impl ContextTrait for Context {
             .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
-    fn draw_text(&mut self, text: &str, x: f32, y: f32, z_level: i32) {
+    fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32) {
         let text = text.to_string();
         let command = move || {
-            draw_text_ex(&text, x, y, TextParams::default());
+	    // TODO this tanks performance during zoom (maybe disable it then/cache it?)
+            let (font_size, font_scale, font_aspect) = camera_font_scale(size);
+            let text_params = TextParams {
+                font_size,
+                font_scale,
+                font_scale_aspect: font_aspect,
+                ..Default::default()
+            };
+            draw_text_ex(&text, x, y, text_params);
         };
         self.draw_buffer
             .borrow_mut()
@@ -62,7 +70,7 @@ impl ContextTrait for Context {
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
+            self.draw_text(&format!("ERROR('{name}')"), 20., x, y, 9999);
         }
     }
 
@@ -87,7 +95,7 @@ impl ContextTrait for Context {
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
+            self.draw_text(&format!("ERROR('{name}')"), 20., x, y, 9999);
         }
     }
 
@@ -112,7 +120,7 @@ impl ContextTrait for Context {
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), target.x, target.y, 9999)
+            self.draw_text(&format!("ERROR('{name}')"), 20., target.x, target.y, 9999)
         }
     }
 
