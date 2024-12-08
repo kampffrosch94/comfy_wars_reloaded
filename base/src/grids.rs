@@ -23,11 +23,7 @@ impl<T> Default for Grid<T> {
 
 impl<T: Clone> Grid<T> {
     pub fn new(width: i32, height: i32, value: T) -> Self {
-        Self {
-            data: vec![value; (width * height) as usize],
-            width,
-            height,
-        }
+        Self { data: vec![value; (width * height) as usize], width, height }
     }
 
     pub fn filled_with<F: FnMut(i32, i32) -> T>(width: i32, height: i32, mut f: F) -> Self {
@@ -39,11 +35,7 @@ impl<T: Clone> Grid<T> {
             }
         }
 
-        Self {
-            data,
-            width,
-            height,
-        }
+        Self { data, width, height }
     }
 
     pub fn width(&self) -> i32 {
@@ -143,9 +135,7 @@ impl<T: Clone> Grid<T> {
     }
 
     pub fn coords(&self) -> Vec<Pos> {
-        self.iter()
-            .map(|(x, y, _)| Pos::new(x, y))
-            .collect::<Vec<_>>()
+        self.iter().map(|(x, y, _)| Pos::new(x, y)).collect::<Vec<_>>()
     }
 
     pub fn len(&self) -> usize {
@@ -217,11 +207,7 @@ impl<T: Clone> Grid<T> {
             let lhs: R = lhs.clone().into();
             data.push(lhs.clone().mul(rhs.clone()));
         }
-        Grid {
-            data,
-            width: self.width,
-            height: self.height,
-        }
+        Grid { data, width: self.width, height: self.height }
     }
 
     /// multiplies each value in the grid with each value at the same
@@ -257,11 +243,7 @@ impl<T: Clone> Grid<T> {
             let lhs: R = lhs.clone().into();
             data.push(lhs.add(rhs.clone()));
         }
-        Grid {
-            data,
-            width: self.width,
-            height: self.height,
-        }
+        Grid { data, width: self.width, height: self.height }
     }
 
     /// adds each value in the grid with each value at the same
@@ -294,11 +276,7 @@ impl<T: Clone> Grid<T> {
             let lhs: R = lhs.clone().into();
             data.push(lhs.mul(scalar.clone()));
         }
-        Grid {
-            data,
-            width: self.width,
-            height: self.height,
-        }
+        Grid { data, width: self.width, height: self.height }
     }
 
     /// clamps all values in the grid, so that
@@ -368,10 +346,7 @@ fn test_stuff() {
 
     assert_eq!(grid[Pos::new(1, 0)], 0);
 
-    assert_eq!(
-        grid.into_iter_values().collect::<Vec<_>>(),
-        vec![0, 0, 0, 5, 0, 0]
-    );
+    assert_eq!(grid.into_iter_values().collect::<Vec<_>>(), vec![0, 0, 0, 5, 0, 0]);
 }
 
 #[test]
@@ -383,10 +358,7 @@ fn readme_test() {
     assert_eq!(grid[Pos::new(1, 0)], 0);
 
     // Converting grid to a Vec.
-    assert_eq!(
-        grid.into_iter_values().collect::<Vec<_>>(),
-        vec![0, 0, 0, 5, 0, 0]
-    );
+    assert_eq!(grid.into_iter_values().collect::<Vec<_>>(), vec![0, 0, 0, 5, 0, 0]);
 }
 
 #[test]

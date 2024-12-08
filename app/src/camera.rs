@@ -29,14 +29,7 @@ impl CameraWrapper {
 
         let camera = Self::create_camera(scale, offset.into());
         set_camera(&camera);
-        CameraWrapper {
-            scale,
-            scale_exp,
-            scale_tween,
-            offset,
-            offset_tween,
-            camera,
-        }
+        CameraWrapper { scale, scale_exp, scale_tween, offset, offset_tween, camera }
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
@@ -130,10 +123,7 @@ pub struct Vec2f {
 
 impl std::fmt::Debug for Vec2f {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Vec2f")
-            .field("x", &self.x)
-            .field("y", &self.y)
-            .finish()
+        f.debug_struct("Vec2f").field("x", &self.x).field("y", &self.y).finish()
     }
 }
 
@@ -145,18 +135,12 @@ impl TweenValue for Vec2f {
 
 impl From<Vec2> for Vec2f {
     fn from(value: Vec2) -> Self {
-        Vec2f {
-            x: value.x,
-            y: value.y,
-        }
+        Vec2f { x: value.x, y: value.y }
     }
 }
 
 impl Into<Vec2> for Vec2f {
     fn into(self) -> Vec2 {
-        Vec2 {
-            x: self.x,
-            y: self.y,
-        }
+        Vec2 { x: self.x, y: self.y }
     }
 }

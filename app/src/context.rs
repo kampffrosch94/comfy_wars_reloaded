@@ -29,20 +29,14 @@ impl ContextTrait for Context {
     }
 
     fn draw_rect(&mut self, rect: base::Rect, c: base::Color, z_level: i32) {
-        let color = macroquad::prelude::Color {
-            r: c.r,
-            g: c.g,
-            b: c.b,
-            a: c.a,
-        };
+        let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
         let command = move || {
             draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
         };
-        self.draw_buffer.borrow_mut().push(DrawCommand {
-            z_level,
-            command: Box::new(command),
-        });
+        self.draw_buffer
+            .borrow_mut()
+            .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
     fn draw_text(&mut self, text: &str, x: f32, y: f32, z_level: i32) {
@@ -50,10 +44,9 @@ impl ContextTrait for Context {
         let command = move || {
             draw_text_ex(&text, x, y, TextParams::default());
         };
-        self.draw_buffer.borrow_mut().push(DrawCommand {
-            z_level,
-            command: Box::new(command),
-        });
+        self.draw_buffer
+            .borrow_mut()
+            .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32) {
@@ -61,43 +54,38 @@ impl ContextTrait for Context {
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
             let source = None;
-            let params = DrawTextureParams {
-                source,
-                ..Default::default()
-            };
+            let params = DrawTextureParams { source, ..Default::default() };
             let command = move || {
                 draw_texture_ex(&texture, x, y, WHITE, params);
             };
-            self.draw_buffer.borrow_mut().push(DrawCommand {
-                z_level,
-                command: Box::new(command),
-            });
+            self.draw_buffer
+                .borrow_mut()
+                .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
             self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
         }
     }
 
-    fn draw_texture_part(&mut self, name: &str, src: base::Rect, x: f32, y: f32, z_level: i32) {
+    fn draw_texture_part(
+        &mut self,
+        name: &str,
+        src: base::Rect,
+        x: f32,
+        y: f32,
+        z_level: i32,
+    ) {
         // load if not in texture store
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
-            let source = Some(macroquad::math::Rect {
-                x: src.x,
-                y: src.y,
-                w: src.w,
-                h: src.h,
-            });
-            let params = DrawTextureParams {
-                source,
-                ..Default::default()
-            };
+            let source =
+                Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
+            let params = DrawTextureParams { source, ..Default::default() };
             let command = move || {
                 draw_texture_ex(&texture, x, y, WHITE, params);
             };
-            self.draw_buffer.borrow_mut().push(DrawCommand {
-                z_level,
-                command: Box::new(command),
-            });
+            self.draw_buffer
+                .borrow_mut()
+                .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
             self.draw_text(&format!("ERROR('{name}')"), x, y, 9999)
         }
@@ -113,25 +101,16 @@ impl ContextTrait for Context {
         // load if not in texture store
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
-            let source = Some(macroquad::math::Rect {
-                x: src.x,
-                y: src.y,
-                w: src.w,
-                h: src.h,
-            });
+            let source =
+                Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let dest_size = Some(vec2(target.w, target.h));
-            let params = DrawTextureParams {
-                source,
-                dest_size,
-                ..Default::default()
-            };
+            let params = DrawTextureParams { source, dest_size, ..Default::default() };
             let command = move || {
                 draw_texture_ex(&texture, target.x, target.y, WHITE, params);
             };
-            self.draw_buffer.borrow_mut().push(DrawCommand {
-                z_level,
-                command: Box::new(command),
-            });
+            self.draw_buffer
+                .borrow_mut()
+                .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
             self.draw_text(&format!("ERROR('{name}')"), target.x, target.y, 9999)
         }
@@ -162,18 +141,8 @@ impl ContextTrait for Context {
     fn texture_dimensions(&mut self, name: &str) -> base::Rect {
         self.textures
             .get(name)
-            .map(|t| base::Rect {
-                x: 0.,
-                y: 0.,
-                w: t.width(),
-                h: t.width(),
-            })
-            .unwrap_or(base::Rect {
-                x: 0.,
-                y: 0.,
-                w: 0.,
-                h: 0.,
-            })
+            .map(|t| base::Rect { x: 0., y: 0., w: t.width(), h: t.width() })
+            .unwrap_or(base::Rect { x: 0., y: 0., w: 0., h: 0. })
     }
 }
 

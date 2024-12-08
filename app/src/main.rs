@@ -105,22 +105,14 @@ impl WorkerReloader {
         let (tx, receiver) = std::sync::mpsc::channel();
 
         let mut watcher = notify::recommended_watcher(tx).unwrap();
-        watcher
-            .watch(path.parent().unwrap(), RecursiveMode::NonRecursive)
-            .unwrap();
+        watcher.watch(path.parent().unwrap(), RecursiveMode::NonRecursive).unwrap();
 
         let create: libloading::Symbol<extern "C" fn() -> PersistWrapper> =
             unsafe { worker.lib.get(b"permanent_state").unwrap() };
         let persist_state = create();
 
         let worker = Some(worker);
-        Self {
-            worker,
-            watcher,
-            receiver,
-            path,
-            persist_state,
-        }
+        Self { worker, watcher, receiver, path, persist_state }
     }
 
     fn create_worker(path: &Path) -> WorkerWrapper {
@@ -136,11 +128,7 @@ impl WorkerReloader {
                 lib.get(b"fleeting_state_create").unwrap();
             let fleeting_state = fleeting_state_create();
 
-            WorkerWrapper {
-                lib,
-                update,
-                fleeting_state,
-            }
+            WorkerWrapper { lib, update, fleeting_state }
         }
     }
 
@@ -149,9 +137,7 @@ impl WorkerReloader {
         while let Ok(event) = self.receiver.try_recv() {
             if let Ok(e) = event {
                 if e.kind.is_create()
-                    && e.paths
-                        .iter()
-                        .any(|p| p.file_name() == self.path.file_name())
+                    && e.paths.iter().any(|p| p.file_name() == self.path.file_name())
                 {
                     dbg!(&e);
                     modified = true;
@@ -164,7 +150,8 @@ impl WorkerReloader {
             {
                 let worker = self.worker.take().unwrap();
                 #[allow(improper_ctypes_definitions)]
-                type FleetingStateDisposeFuncT = extern "C" fn(&mut PersistWrapper, PersistWrapper);
+                type FleetingStateDisposeFuncT =
+                    extern "C" fn(&mut PersistWrapper, PersistWrapper);
                 let fleeting_state_dispose: libloading::Symbol<FleetingStateDisposeFuncT> =
                     unsafe { worker.lib.get(b"fleeting_state_dispose").unwrap() };
                 fleeting_state_dispose(&mut self.persist_state, worker.fleeting_state);

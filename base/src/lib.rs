@@ -20,7 +20,7 @@ pub trait ContextTrait {
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32);
 
     fn draw_texture_part(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
-    
+
     fn draw_texture_part_scaled(&mut self, name: &str, src: Rect, target: Rect, z_level: i32);
 
     fn load_texture(&mut self, name: &str, path: &str);
