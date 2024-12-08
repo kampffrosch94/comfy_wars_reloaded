@@ -11,10 +11,7 @@ pub fn get_neighbors<T>(pos: Pos, grid: &Grid<T>) -> Vec<Pos> {
 }
 
 pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) {
-    let mut next: Vec<Pos> = seed
-        .iter()
-        .flat_map(|pos| get_neighbors(*pos, grid))
-        .collect();
+    let mut next: Vec<Pos> = seed.iter().flat_map(|pos| get_neighbors(*pos, grid)).collect();
     next.extend(seed.iter()); // sometimes its necessary to recompute seeds too
 
     while !next.is_empty() {

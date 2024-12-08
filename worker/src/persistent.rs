@@ -66,10 +66,7 @@ impl PersistentState {
                         w: GRIDSIZE as _,
                         h: GRIDSIZE as _,
                     };
-                    let pos = FPos {
-                        x: tile.px[0],
-                        y: tile.px[1],
-                    };
+                    let pos = FPos { x: tile.px[0], y: tile.px[1] };
                     Tile { source_rect, pos }
                 })
                 .collect();
@@ -100,10 +97,7 @@ impl PersistentState {
                         w: GRIDSIZE as _,
                         h: GRIDSIZE as _,
                     };
-                    let pos = FPos {
-                        x: tile.px[0],
-                        y: tile.px[1],
-                    };
+                    let pos = FPos { x: tile.px[0], y: tile.px[1] };
                     Tile { source_rect, pos }
                 })
                 .collect();

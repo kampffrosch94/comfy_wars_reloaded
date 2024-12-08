@@ -17,11 +17,7 @@ pub struct Key<T> {
 
 impl<T> Clone for Key<T> {
     fn clone(&self) -> Key<T> {
-        Self {
-            gen: self.gen,
-            index: self.index,
-            _type: PhantomData,
-        }
+        Self { gen: self.gen, index: self.index, _type: PhantomData }
     }
 }
 
@@ -39,25 +35,15 @@ struct Slot<T> {
 
 impl<T> GenArena<T> {
     pub fn new() -> Self {
-        Self {
-            slots: Vec::new(),
-            next_free: 0,
-        }
+        Self { slots: Vec::new(), next_free: 0 }
     }
 
     pub fn push(&mut self, x: T) -> Key<T> {
         if self.next_free >= self.slots.len() {
             let index = self.slots.len();
-            self.slots.push(Slot {
-                gen: 0,
-                content: Content::Filled(x),
-            });
+            self.slots.push(Slot { gen: 0, content: Content::Filled(x) });
             self.next_free += 1;
-            return Key {
-                gen: 0,
-                index: index as u32,
-                _type: PhantomData,
-            };
+            return Key { gen: 0, index: index as u32, _type: PhantomData };
         } else {
             let index = self.next_free;
             let slot = &mut self.slots[index];
@@ -69,11 +55,7 @@ impl<T> GenArena<T> {
             };
             slot.gen += 1;
             slot.content = Content::Filled(x);
-            return Key {
-                index: index as u32,
-                gen: slot.gen,
-                _type: PhantomData,
-            };
+            return Key { index: index as u32, gen: slot.gen, _type: PhantomData };
         }
     }
 
@@ -129,11 +111,7 @@ impl<T> GenArena<T> {
 
     pub fn iter_keys(&self) -> impl Iterator<Item = (Key<T>, &T)> {
         self.slots.iter().enumerate().filter_map(|(index, slot)| {
-            let key = Key {
-                index: index as u32,
-                gen: slot.gen,
-                _type: PhantomData,
-            };
+            let key = Key { index: index as u32, gen: slot.gen, _type: PhantomData };
             match slot.content {
                 Content::Filled(ref content) => Some((key, content)),
                 Content::Empty(_) => None,
@@ -196,9 +174,6 @@ mod test {
         let key2 = arena.push(2);
         let _key3 = arena.push(3);
         arena.remove(key2);
-        assert_eq!(
-            &[1, 3],
-            arena.iter().cloned().collect::<Vec<_>>().as_slice()
-        );
+        assert_eq!(&[1, 3], arena.iter().cloned().collect::<Vec<_>>().as_slice());
     }
 }

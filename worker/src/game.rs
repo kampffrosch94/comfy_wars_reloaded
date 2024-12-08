@@ -48,7 +48,8 @@ impl GameState {
         let mut actors = GenArena::new();
         {
             let input = std::fs::read_to_string("../assets/entities_def.json").unwrap();
-            let entity_defs: HashMap<String, EntityDef> = DeJson::deserialize_json(&input).unwrap();
+            let entity_defs: HashMap<String, EntityDef> =
+                DeJson::deserialize_json(&input).unwrap();
             // load entities on map
             let input = std::fs::read_to_string("../assets/entities_map.json").unwrap();
             let map_entities: Vec<EntityOnMap> = DeJson::deserialize_json(&input).unwrap();
@@ -57,10 +58,7 @@ impl GameState {
                 let name = &me.def;
                 let def = &entity_defs[&me.def];
                 let a = Actor {
-                    pos: Pos {
-                        x: me.pos[0],
-                        y: me.pos[1],
-                    },
+                    pos: Pos { x: me.pos[0], y: me.pos[1] },
                     draw_pos: FPos {
                         x: me.pos[0] as f32 * GRIDSIZE,
                         y: me.pos[1] as f32 * GRIDSIZE,
@@ -74,10 +72,7 @@ impl GameState {
                 actors.push(a);
             }
         }
-        GameState {
-            actors,
-            selection: Selection::None,
-        }
+        GameState { actors, selection: Selection::None }
     }
 }
 
@@ -85,9 +80,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     s.delta = c.delta();
     f.co.run_until_stall(s);
 
-    draw_nine_patch(c, "ui_bg", 16., Rect {x: 0., y: 500., w: 100., h: 70.});
-    draw_nine_patch(c, "ui_bg", 16., Rect {x: 0., y: 600., w: 32., h: 100.});
-    draw_nine_patch(c, "ui_bg", 16., Rect {x: 100., y: 600., w: 180., h: 180.});
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 0., y: 500., w: 100., h: 70. });
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 0., y: 600., w: 32., h: 100. });
+    draw_nine_patch(c, "ui_bg", 16., Rect { x: 100., y: 600., w: 180., h: 180. });
 
     //c.draw_rect(rect, c, z_level);
     // TODO add Z to draw text
@@ -147,11 +142,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
                 grid[actor.pos] = -99;
                 seeds.push(actor.pos);
             }
-            let highest_reachable_pos = grid
-                .iter_coords()
-                .max_by_key(|(_pos, val)| *val)
-                .map(|(pos, _)| pos)
-                .unwrap();
+            let highest_reachable_pos =
+                grid.iter_coords().max_by_key(|(_pos, val)| *val).map(|(pos, _)| pos).unwrap();
             seeds.push(highest_reachable_pos);
             dijkstra(&mut grid, &seeds, movement_cost(s, PLAYER_TEAM));
             grid.mul_inplace(&move_range);
@@ -287,11 +279,9 @@ fn draw_move_path(c: &mut dyn ContextTrait, s: &PersistentState, path: &[Pos]) {
     }
 }
 
-#[rustfmt::skip]
 fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: Rect) {
     let z = 100;
-    let source_rect = Rect {x: 0., y: 0., w: 192., h: 64.,};
-
+    let source_rect = Rect { x: 0., y: 0., w: 192., h: 64. };
 
     // corners
     let tl = source_rect.take_left(corner).take_top(corner);
@@ -322,14 +312,11 @@ fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: 
     let source = source_rect.skip_top(corner).take_right(corner).skip_bot(corner);
     let target = trect.skip_top(amount).skip_bot(amount).take_right(amount);
     c.draw_texture_part_scaled(texture, source, target, z);
-    // center 
-    let source = source_rect.skip_top(corner).skip_right(corner)
-	.skip_bot(corner).skip_left(corner);
-    let target = trect.skip_top(corner).skip_right(corner)
-	.skip_bot(corner).skip_left(corner);
+    // center
+    let source =
+        source_rect.skip_top(corner).skip_right(corner).skip_bot(corner).skip_left(corner);
+    let target = trect.skip_top(corner).skip_right(corner).skip_bot(corner).skip_left(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
-
-
 
     //c.draw_text(&format!("{source:?}"), 0., 600., 50);
 }
