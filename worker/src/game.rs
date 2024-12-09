@@ -80,9 +80,22 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     s.delta = c.delta();
     f.co.run_until_stall(s);
 
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 00., y: 500., w: 100., h: 70. });
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 00., y: 600., w: 32., h: 100. });
-    draw_nine_patch(c, "ui_bg", 16., Rect { x: 50., y: 600., w: 180., h: 180. });
+    let r1: Rect = c.draw_text("Attack!", 6., 100., 180., 150);
+    //draw_nine_patch(c, "ui_bg", 5., r.grow_all(5.));
+    c.draw_text("Wait!", 6., 100., 189., 150);
+    //draw_nine_patch(c, "ui_bg", 5., r.grow_all(5.));
+    let r2: Rect = c.draw_text("Cancel!", 6., 100., 198., 150);
+    let r = r1.fuse(r2).grow_all(5.);
+    draw_nine_patch(c, "ui_bg", 5., r);
+
+
+    let r: Rect = c.draw_text("Attack!", 6., 100., 580., 150);
+    let color = Color::rgb(0.5,0.5,1.0);
+    c.draw_rect(r.grow_all(3.), color, 120);
+    let color = Color::rgb(0.8,0.8,1.0);
+    c.draw_rect(r.grow_all(4.), color, 110);
+    let color = Color::rgb(0.,0.,1.0);
+    c.draw_rect(r.grow_all(5.), color, 100);
 
     //c.draw_rect(rect, c, z_level);
     // TODO add Z to draw text
@@ -91,6 +104,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     for tile in &s.ground_tiles {
         c.draw_texture_part("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 0);
     }
+
     for tile in &s.terrain_tiles {
         c.draw_texture_part("tiles", tile.source_rect, tile.pos.x, tile.pos.y, 1);
     }
@@ -194,7 +208,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     }
 
 
-    c.draw_text(&format!("Hello World!"), 16., 350., 0., 50);
 }
 
 fn movement_cost<'a>(s: &'a PersistentState, team: Team) -> impl Fn(Pos) -> i32 + 'a {

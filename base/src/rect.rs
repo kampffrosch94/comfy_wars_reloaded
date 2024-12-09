@@ -46,4 +46,29 @@ impl Rect {
     pub fn skip_bot(&self, amount: f32) -> Self {
         Rect { x: self.x, y: self.y, w: self.w, h: self.h - amount }
     }
+
+    pub fn grow_all(&self, amount: f32) -> Self {
+        Rect {
+            x: self.x - amount,
+            y: self.y - amount,
+            w: self.w + 2. * amount,
+            h: self.h + 2. * amount,
+        }
+    }
+
+    /// resulting rect contains both components
+    pub fn fuse(&self, other: Self) -> Self {
+        let x = self.x.min(other.x);
+        let y = self.y.min(other.y);
+
+        // right end x coordinate
+        let rx = (self.x + self.w).max(other.x + other.w);
+        // bottom end y coordinate
+        let by = (self.y + self.h).max(other.y + other.h);
+
+        let w = rx - x;
+        let h = by - y;
+
+        Rect { x, y, w, h }
+    }
 }

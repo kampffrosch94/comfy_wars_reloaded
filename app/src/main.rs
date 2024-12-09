@@ -26,7 +26,7 @@ async fn main() {
     let mut worker = WorkerReloader::new(path);
 
     let mut last_mouse_pos = mouse_position();
-    let ctx = &mut context::Context::default();
+    let ctx = &mut context::Context::new();
     ctx.textures
         .load_texture("../assets/tilemap/tilemap_packed.png", "tiles", false)
         .await

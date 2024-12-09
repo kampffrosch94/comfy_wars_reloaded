@@ -15,7 +15,7 @@ pub trait ContextTrait {
 
     fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
 
-    fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32);
+    fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32) -> Rect;
 
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32);
 
@@ -74,6 +74,22 @@ impl Sub<Pos> for Pos {
     }
 }
 
+/// Wrapper for state that is persisted between reloads
+#[repr(C)]
+pub struct PersistWrapper {
+    pub ptr: *mut c_void,
+    pub size: usize,
+    pub align: usize,
+}
+
+impl PersistWrapper {
+    pub fn ref_mut<T>(&mut self) -> &mut T {
+        // TODO add checks for size and alignment matching
+        let ptr = self.ptr as *mut T;
+        unsafe { &mut *ptr }
+    }
+}
+
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
 pub struct Rect {
@@ -91,18 +107,12 @@ pub struct Color {
     pub a: f32,
 }
 
-/// Wrapper for state that is persisted between reloads
-#[repr(C)]
-pub struct PersistWrapper {
-    pub ptr: *mut c_void,
-    pub size: usize,
-    pub align: usize,
-}
+impl Color {
+    pub fn rgb(r: f32, g: f32, b: f32) -> Self {
+        Color { r, g, b, a: 1.0 }
+    }
 
-impl PersistWrapper {
-    pub fn ref_mut<T>(&mut self) -> &mut T {
-        // TODO add checks for size and alignment matching
-        let ptr = self.ptr as *mut T;
-        unsafe { &mut *ptr }
+    pub fn rgba(r: f32, g: f32, b: f32, a: f32) -> Self {
+        Color { r, g, b, a }
     }
 }
