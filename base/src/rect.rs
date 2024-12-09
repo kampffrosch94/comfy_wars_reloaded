@@ -1,6 +1,14 @@
 use crate::Rect;
 
 impl Rect {
+    pub fn new(x: f32, y: f32, w: f32, h: f32) -> Self {
+        Rect { x, y, w, h }
+    }
+
+    pub fn wh(w: f32, h: f32) -> Self {
+        Rect { x: 0.0, y: 0.0, w, h }
+    }
+
     pub fn take_left(&self, amount: f32) -> Self {
         Rect { x: self.x, y: self.y, w: self.w.min(amount), h: self.h }
     }
@@ -70,5 +78,9 @@ impl Rect {
         let h = by - y;
 
         Rect { x, y, w, h }
+    }
+
+    pub fn scale(&self, factor: f32) -> Self {
+        Rect { x: self.x, y: self.y, w: self.w * factor, h: self.h * factor }
     }
 }

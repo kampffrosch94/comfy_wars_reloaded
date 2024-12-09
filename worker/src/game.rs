@@ -81,12 +81,16 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     f.co.run_until_stall(s);
 
     let r1: Rect = c.draw_text("Attack!", 6., 100., 180., 150);
-    //draw_nine_patch(c, "ui_bg", 5., r.grow_all(5.));
     c.draw_text("Wait!", 6., 100., 189., 150);
-    //draw_nine_patch(c, "ui_bg", 5., r.grow_all(5.));
     let r2: Rect = c.draw_text("Cancel!", 6., 100., 198., 150);
     let r = r1.fuse(r2).grow_all(5.);
     draw_nine_patch(c, "ui_bg", 5., r);
+
+
+    let sprite = &s.sprites["pointer"];
+    sprite.draw(c, 85., 180., 300);
+
+    //c.load_texture("ui_arrow", "../assets/PNG/Blue/Default/arrow_basic_e_small.png");
 
 
     let r: Rect = c.draw_text("Attack!", 6., 100., 580., 150);
