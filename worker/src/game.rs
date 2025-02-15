@@ -79,26 +79,34 @@ impl GameState {
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     s.delta = c.delta();
     f.co.run_until_stall(s);
-
-    let r1: Rect = c.draw_text("Attack!", 6., 100., 180., 150);
-    c.draw_text("Wait!", 6., 100., 189., 150);
-    let r2: Rect = c.draw_text("Cancel!", 6., 100., 198., 150);
-    let r = r1.fuse(r2).grow_all(5.);
-    draw_nine_patch(c, "ui_bg", 5., r);
-
-
-    let sprite = &s.sprites["pointer"];
-    sprite.draw(c, 85., 180., 300);
-
     //c.load_texture("ui_arrow", "../assets/PNG/Blue/Default/arrow_basic_e_small.png");
 
+    let h = 9.;
+    let x = 100.;
+    let ystart = 180.;
+    let mut y = ystart;
+    let r1: Rect = c.draw_text("Attack!", 6., x, y, 150);
+    y += h;
+    let r2 = c.draw_text("Wait!", 6., x, y, 150);
+    y += h;
+    let r3: Rect = c.draw_text("Cancel!", 6., x, y, 150);
+    let r = r1.fuse(r3).grow_all(5.);
+    draw_nine_patch(c, "ui_bg", 5., r);
+
+    let mouse = c.mouse_world();
+    let y = match (r1.contains(mouse), r2.contains(mouse), r3.contains(mouse)) {
+        (true, _, _) | (false, false, false) => ystart - h,
+        (false, true, _) => ystart,
+        (false, false, true) => ystart + h,
+    };
+    s.sprites["pointer"].draw(c, x - 15., y, 300);
 
     let r: Rect = c.draw_text("Attack!", 6., 100., 580., 150);
-    let color = Color::rgb(0.5,0.5,1.0);
+    let color = Color::rgb(0.5, 0.5, 1.0);
     c.draw_rect(r.grow_all(3.), color, 120);
-    let color = Color::rgb(0.8,0.8,1.0);
+    let color = Color::rgb(0.8, 0.8, 1.0);
     c.draw_rect(r.grow_all(4.), color, 110);
-    let color = Color::rgb(0.,0.,1.0);
+    let color = Color::rgb(0., 0., 1.0);
     c.draw_rect(r.grow_all(5.), color, 100);
 
     //c.draw_rect(rect, c, z_level);
@@ -210,8 +218,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
             s.g.selection = Selection::None;
         }
     }
-
-
 }
 
 fn movement_cost<'a>(s: &'a PersistentState, team: Team) -> impl Fn(Pos) -> i32 + 'a {
@@ -335,5 +341,4 @@ fn draw_nine_patch(c: &mut dyn ContextTrait, texture: &str, corner: f32, trect: 
         source_rect.skip_top(corner).skip_right(corner).skip_bot(corner).skip_left(corner);
     let target = trect.skip_top(corner).skip_right(corner).skip_bot(corner).skip_left(corner);
     c.draw_texture_part_scaled(texture, source, target, z);
-
 }

@@ -1,4 +1,4 @@
-use crate::Rect;
+use crate::{FPos, Rect};
 
 impl Rect {
     pub fn new(x: f32, y: f32, w: f32, h: f32) -> Self {
@@ -82,5 +82,12 @@ impl Rect {
 
     pub fn scale(&self, factor: f32) -> Self {
         Rect { x: self.x, y: self.y, w: self.w * factor, h: self.h * factor }
+    }
+
+    pub fn contains(&self, pos: FPos) -> bool {
+        self.x <= pos.x
+            && pos.x < self.x + self.w
+            && self.y <= pos.y
+            && pos.y < self.y + self.h
     }
 }
