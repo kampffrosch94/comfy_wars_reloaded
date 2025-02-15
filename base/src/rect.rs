@@ -90,4 +90,8 @@ impl Rect {
             && self.y <= pos.y
             && pos.y < self.y + self.h
     }
+
+    pub fn center(&self) -> FPos {
+        FPos { x: self.x + self.w / 2.0, y: self.y + self.h / 2.0 }
+    }
 }

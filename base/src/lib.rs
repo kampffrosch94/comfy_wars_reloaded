@@ -1,4 +1,5 @@
 use std::{ffi::c_void, ops::Sub};
+pub mod circle;
 pub mod grids;
 pub mod ldtk;
 pub mod rect;
@@ -14,6 +15,10 @@ pub trait ContextTrait {
     fn fps(&self) -> f32;
 
     fn draw_rect(&mut self, rect: Rect, c: Color, z_level: i32);
+
+    fn draw_rect_lines(&mut self, rect: Rect, thickness: f32, c: Color, z_level: i32);
+
+    fn draw_circle(&mut self, circle: Circle, c: Color, z_level: i32);
 
     fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32) -> Rect;
 
@@ -105,6 +110,11 @@ pub struct Color {
     pub g: f32,
     pub b: f32,
     pub a: f32,
+}
+
+pub struct Circle {
+    pub pos: FPos,
+    pub radius: f32,
 }
 
 impl Color {

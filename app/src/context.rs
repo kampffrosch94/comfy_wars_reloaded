@@ -39,6 +39,34 @@ impl ContextTrait for Context {
             .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
+    fn draw_rect_lines(
+        &mut self,
+        rect: base::Rect,
+        thickness: f32,
+        c: base::Color,
+        z_level: i32,
+    ) {
+        let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
+
+        let command = move || {
+            draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color);
+        };
+        self.draw_buffer
+            .borrow_mut()
+            .push(DrawCommand { z_level, command: Box::new(command) });
+    }
+
+    fn draw_circle(&mut self, circle: base::Circle, c: base::Color, z_level: i32) {
+        let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
+
+        let command = move || {
+            draw_circle(circle.pos.x, circle.pos.y, circle.radius, color);
+        };
+        self.draw_buffer
+            .borrow_mut()
+            .push(DrawCommand { z_level, command: Box::new(command) });
+    }
+
     fn draw_text(
         &mut self,
         text: &str,
@@ -146,6 +174,17 @@ impl ContextTrait for Context {
         }
     }
 
+    fn load_texture(&mut self, name: &str, path: &str) {
+        self.loading.push((name.to_string(), path.to_string()));
+    }
+
+    fn texture_dimensions(&mut self, name: &str) -> base::Rect {
+        self.textures
+            .get(name)
+            .map(|t| base::Rect { x: 0., y: 0., w: t.width(), h: t.width() })
+            .unwrap_or(base::Rect { x: 0., y: 0., w: 0., h: 0. })
+    }
+
     fn is_pressed(&self, button: Button) -> bool {
         match button {
             Button::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
@@ -162,17 +201,6 @@ impl ContextTrait for Context {
     fn mouse_world(&self) -> FPos {
         let m = self.camera.mouse_world();
         FPos { x: m.x, y: m.y }
-    }
-
-    fn load_texture(&mut self, name: &str, path: &str) {
-        self.loading.push((name.to_string(), path.to_string()));
-    }
-
-    fn texture_dimensions(&mut self, name: &str) -> base::Rect {
-        self.textures
-            .get(name)
-            .map(|t| base::Rect { x: 0., y: 0., w: t.width(), h: t.width() })
-            .unwrap_or(base::Rect { x: 0., y: 0., w: 0., h: 0. })
     }
 }
 
